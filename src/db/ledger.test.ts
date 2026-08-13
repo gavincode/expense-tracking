@@ -11,6 +11,8 @@ import {
   updateExpense,
   getById,
   deleteExpense,
+  renameCategory,
+  deleteCategory,
 } from './ledger';
 import { toCents, fromCents } from '../utils/money';
 
@@ -138,6 +140,25 @@ describe('ledger db', () => {
     expect(summary.count).toBe(0);
     expect(summary.totalCents).toBe(0);
     const raw = await db.expenses.get(id);
+    expect(raw?.deleted).toBe(1);
+  });
+
+  it('自定义分类可重命名与软删除', async () => {
+    await addCustomCategory({
+      id: 'custom-x',
+      groupId: null,
+      name: '园林',
+      color: '#8fb0a9',
+      colorLight: '#e9f2f0',
+      colorDark: '#668d85',
+    });
+    await renameCategory('custom-x', '庭院');
+    let items = await listCustomCategories();
+    expect(items.find((c) => c.id === 'custom-x')?.name).toBe('庭院');
+    await deleteCategory('custom-x');
+    items = await listCustomCategories();
+    expect(items.find((c) => c.id === 'custom-x')).toBeUndefined();
+    const raw = await db.categories.get('custom-x');
     expect(raw?.deleted).toBe(1);
   });
 });

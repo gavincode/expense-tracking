@@ -20,6 +20,7 @@ export interface CustomCategory {
   colorLight: string;
   colorDark: string;
   createdAt: number;
+  deleted?: number; // 0 = 正常, 1 = 已删除
 }
 
 class LedgerDB extends Dexie {
@@ -109,10 +110,18 @@ export async function deleteExpense(id: number): Promise<void> {
 export async function addCustomCategory(
   input: Omit<CustomCategory, 'createdAt'>,
 ): Promise<string> {
-  await db.categories.add({ ...input, createdAt: Date.now() });
+  await db.categories.add({ ...input, createdAt: Date.now(), deleted: 0 });
   return input.id;
 }
 
 export async function listCustomCategories(): Promise<CustomCategory[]> {
-  return db.categories.toArray();
+  return (await db.categories.toArray()).filter((c) => !c.deleted);
+}
+
+export async function renameCategory(id: string, name: string): Promise<void> {
+  await db.categories.update(id, { name });
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await db.categories.update(id, { deleted: 1 });
 }
