@@ -19,7 +19,7 @@
       title="日期"
       is-link
       :value="date"
-      @click="showDatePicker = true"
+      @click="openDatePicker"
     />
 
     <van-field
@@ -69,20 +69,19 @@ import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
 import { storeToRefs } from 'pinia';
 import { useCategoryStore } from '../stores/category';
+import { useDraftStore } from '../stores/draft';
 import { addExpense } from '../db/ledger';
 import { toCents } from '../utils/money';
-import dayjs from 'dayjs';
 
 const router = useRouter();
 const categoryStore = useCategoryStore();
 const { selected } = storeToRefs(categoryStore);
 
-const amount = ref('');
-const note = ref('');
-const showKeyboard = ref(true);
+const draft = useDraftStore();
+const { amount, note, date } = storeToRefs(draft);
+const showKeyboard = ref(false);
 const showDatePicker = ref(false);
-const date = ref(dayjs().format('YYYY-MM-DD'));
-const pickerDate = ref<string[]>(dayjs().format('YYYY-MM-DD').split('-'));
+const pickerDate = ref<string[]>(draft.date.split('-'));
 const minDate = new Date(2000, 0, 1);
 const maxDate = new Date();
 
@@ -99,37 +98,42 @@ function goCategories() {
 
 function onInput(key: string) {
   if (key === '.') {
-    if (!amount.value.includes('.')) {
-      amount.value += '.';
+    if (!draft.amount.includes('.')) {
+      draft.amount += '.';
     }
     return;
   }
   if (!/^\d$/.test(key)) {
     return;
   }
-  const [intPart, decPart = ''] = amount.value.split('.');
+  const [intPart, decPart = ''] = draft.amount.split('.');
   if (decPart.length >= 2) {
     return;
   }
   if (intPart.length >= 9) {
     return;
   }
-  amount.value += key;
+  draft.amount += key;
 }
 
 function onDelete() {
-  amount.value = amount.value.slice(0, -1);
+  draft.amount = draft.amount.slice(0, -1);
+}
+
+function openDatePicker() {
+  pickerDate.value = draft.date.split('-');
+  showDatePicker.value = true;
 }
 
 function onDateConfirm({ selectedValues }: { selectedValues: string[] }) {
-  date.value = selectedValues.join('-');
+  draft.date = selectedValues.join('-');
   showDatePicker.value = false;
 }
 
 async function save() {
   let amountCents: number;
   try {
-    amountCents = toCents(amount.value);
+    amountCents = toCents(draft.amount);
   } catch {
     showToast('请输入有效金额');
     return;
@@ -142,9 +146,10 @@ async function save() {
     amountCents,
     categoryId: selected.value.categoryId,
     categoryPath: selected.value.path,
-    date: date.value,
-    note: note.value,
+    date: draft.date,
+    note: draft.note,
   });
+  draft.reset();
   showToast('已保存');
   router.push('/');
 }
