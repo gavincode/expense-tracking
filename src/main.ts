@@ -26,4 +26,7 @@ const app = createApp(App);
 
 app.use(createPinia()).use(router).mount('#app');
 
-registerSW({ immediate: true });
+// 纯静态版本：仅在 http(s) 下注册 PWA，file:// 直接打开时不注册
+if (location.protocol.startsWith('http')) {
+  registerSW({ immediate: true });
+}

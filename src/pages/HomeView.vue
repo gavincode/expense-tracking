@@ -2,11 +2,11 @@
   <div v-if="!ledgerId" class="page home">
     <header class="home-header">
       <h1 class="home-title">装修账本</h1>
-      <p class="home-subtitle">和家人一起记下每一笔装修开销</p>
+      <p class="home-subtitle">记下每一笔装修开销</p>
     </header>
 
     <div class="create-card">
-      <div class="create-title">创建账本</div>
+      <div class="create-title">开始记账</div>
       <van-field
         v-model="newNickname"
         label="我的昵称"
@@ -22,9 +22,9 @@
         :loading="creating"
         @click="createLedger"
       >
-        创建账本
+        开始记账
       </van-button>
-      <p class="hint">创建后生成邀请码，家人加入同一个账本</p>
+      <p class="hint">账本保存在本机浏览器，可随时导出备份给家人</p>
     </div>
   </div>
 
@@ -33,11 +33,9 @@
       <div class="header-row">
         <h1 class="home-title">装修账本</h1>
         <div class="header-actions">
-          <button type="button" class="action-link" @click="openInvitePopup">邀请</button>
+          <button type="button" class="action-link" @click="exportData">导出</button>
+          <button type="button" class="action-link" @click="triggerImport">导入</button>
           <button type="button" class="action-link" @click="openNicknamePopup">昵称</button>
-          <button type="button" class="action-link" :disabled="syncing" @click="syncAll">
-            {{ syncing ? '同步中…' : '同步' }}
-          </button>
         </div>
       </div>
       <p class="home-subtitle">记下每一笔装修开销</p>
@@ -103,18 +101,13 @@
       </div>
     </van-popup>
 
-    <van-popup v-model:show="invitePopup" position="bottom" round>
-      <div class="invite-panel">
-        <div class="panel-title">邀请家人加入</div>
-        <div class="invite-code">{{ inviteCode || '--' }}</div>
-        <img v-if="inviteQr" :src="inviteQr" alt="邀请二维码" class="invite-qr" />
-        <div class="invite-link">{{ inviteLink }}</div>
-        <div class="panel-actions">
-          <van-button plain round @click="invitePopup = false">关闭</van-button>
-          <van-button type="primary" round @click="copyInviteLink">复制链接</van-button>
-        </div>
-      </div>
-    </van-popup>
+    <input
+      ref="fileInput"
+      type="file"
+      accept="application/json,.json"
+      class="hidden-file"
+      @change="onImportFile"
+    />
   </div>
 </template>
 
@@ -136,8 +129,7 @@ import { fromCents } from '../utils/money';
 import { useDraftStore } from '../stores/draft';
 import { useIdentityStore } from '../stores/identity';
 import { createLedger as apiCreateLedger } from '../api/client';
-import QRCode from 'qrcode';
-import { useSync } from '../composables/useSync';
+import { exportBackup, importBackup } from '../utils/backup';
 import type { LedgerMember } from '../types/ledger';
 import dayjs from 'dayjs';
 
@@ -169,21 +161,8 @@ const ledgerId = ref(safeGet('rl_ledger_id'));
 const inviteCode = ref(safeGet('rl_invite_code'));
 const creating = ref(false);
 const nicknamePopup = ref(false);
-const invitePopup = ref(false);
-const inviteQr = ref('');
 const newNickname = ref(identity.nickname);
-
-const inviteLink = computed(() =>
-  inviteCode.value ? `${location.origin}/join?code=${inviteCode.value}` : '',
-);
-
-const { syncing, syncOnce } = useSync(
-  () => ledgerId.value,
-  () => inviteCode.value,
-  () => {
-    loadRecent();
-  },
-);
+const fileInput = ref<HTMLInputElement>();
 
 const members = computed<LedgerMember[]>(() => {
   try {
@@ -215,8 +194,8 @@ async function createLedger() {
     safeSet('rl_members', JSON.stringify([creator]));
     ledgerId.value = result.ledgerId;
     inviteCode.value = result.inviteCode;
-    await syncAll();
-    showToast('账本已创建');
+    await loadRecent();
+    showToast('账本已创建，记录保存在本机');
   } catch (error) {
     showToast('创建失败：' + String(error));
   } finally {
@@ -224,36 +203,61 @@ async function createLedger() {
   }
 }
 
-async function syncAll() {
-  await syncOnce();
+async function exportData() {
+  try {
+    const json = await exportBackup();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `装修账本-备份-${dayjs().format('YYYYMMDD-HHmm')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('已导出备份文件');
+  } catch (error) {
+    showToast('导出失败：' + String(error));
+  }
+}
+
+function triggerImport() {
+  fileInput.value?.click();
+}
+
+async function onImportFile(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) {
+    return;
+  }
+  try {
+    await showConfirmDialog({
+      title: '导入备份？',
+      message: '导入会覆盖本机现有数据，确定继续吗？',
+      confirmButtonText: '导入',
+    });
+  } catch {
+    input.value = '';
+    return;
+  }
+  try {
+    const text = await file.text();
+    await importBackup(text);
+    ledgerId.value = safeGet('rl_ledger_id');
+    inviteCode.value = safeGet('rl_invite_code');
+    await loadRecent();
+    showToast('导入成功');
+  } catch (error) {
+    showToast('导入失败：' + String(error));
+  } finally {
+    input.value = '';
+  }
 }
 
 function openNicknamePopup() {
   newNickname.value = identity.nickname;
   nicknamePopup.value = true;
-}
-
-async function openInvitePopup() {
-  invitePopup.value = true;
-  if (inviteCode.value) {
-    try {
-      inviteQr.value = await QRCode.toDataURL(
-        `${location.origin}/join?code=${inviteCode.value}`,
-        { width: 180, margin: 1 },
-      );
-    } catch {
-      inviteQr.value = '';
-    }
-  }
-}
-
-async function copyInviteLink() {
-  try {
-    await navigator.clipboard.writeText(inviteLink.value);
-    showToast('链接已复制');
-  } catch {
-    showToast('复制失败，请手动复制下方链接');
-  }
 }
 
 function confirmNickname() {
@@ -355,10 +359,6 @@ onMounted(() => {
   font-size: var(--font-size-sm);
   min-height: 28px;
   cursor: pointer;
-}
-
-.action-link:disabled {
-  opacity: 0.6;
 }
 
 .section-title {
@@ -538,29 +538,7 @@ onMounted(() => {
   flex: 1;
 }
 
-.invite-panel {
-  padding: var(--space-lg) var(--space-md) calc(var(--space-lg) + env(safe-area-inset-bottom));
-  text-align: center;
-}
-
-.invite-code {
-  margin: var(--space-md) 0;
-  font-size: 40px;
-  font-weight: 700;
-  letter-spacing: 8px;
-  color: var(--color-primary-dark);
-}
-
-.invite-qr {
-  width: 180px;
-  height: 180px;
-  border-radius: 8px;
-}
-
-.invite-link {
-  margin: var(--space-md) 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  word-break: break-all;
+.hidden-file {
+  display: none;
 }
 </style>

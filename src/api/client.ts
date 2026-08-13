@@ -6,7 +6,11 @@ import {
   mockJoinLedger,
 } from './mockBackend';
 
-const API_BASE: string = (import.meta.env.VITE_API_BASE as string) ?? '/api';
+/**
+ * v2-local-file：完全本地版本，不依赖任何后端/数据库。
+ * 所有"账本"数据保存在浏览器 localStorage 中（IndexedDB 存记录与分类），
+ * 通过导出/导入文件在设备间备份和迁移。
+ */
 
 export class VersionConflictError extends Error {
   constructor(public serverVersion: number) {
@@ -20,49 +24,12 @@ export class LedgerNotFoundError extends Error {
   }
 }
 
-async function parseResponse<T>(response: Response): Promise<T> {
-  if (response.ok) {
-    return (await response.json()) as T;
-  }
-  const payload = (await response.json().catch(() => ({}))) as {
-    error?: string;
-    version?: number;
-  };
-  if (response.status === 409) {
-    throw new VersionConflictError(payload.version ?? 0);
-  }
-  if (response.status === 404) {
-    throw new LedgerNotFoundError();
-  }
-  throw new Error(payload.error ?? `HTTP ${response.status}`);
-}
-
 export async function createLedger(): Promise<{ ledgerId: string; inviteCode: string }> {
-  try {
-    const response = await fetch(`${API_BASE}/ledger`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ action: 'create' }),
-    });
-    return parseResponse(response);
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      return mockCreateLedger();
-    }
-    throw error;
-  }
+  return mockCreateLedger();
 }
 
 export async function getLedger(ledgerId: string): Promise<LedgerFile> {
-  try {
-    const response = await fetch(`${API_BASE}/ledger?ledgerId=${encodeURIComponent(ledgerId)}`);
-    return parseResponse(response);
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      return mockGetLedger(ledgerId);
-    }
-    throw error;
-  }
+  return mockGetLedger(ledgerId);
 }
 
 export async function putLedger(
@@ -70,20 +37,7 @@ export async function putLedger(
   baseVersion: number,
   file: LedgerFile,
 ): Promise<number> {
-  try {
-    const response = await fetch(`${API_BASE}/ledger`, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ ledgerId, baseVersion, file }),
-    });
-    const result = await parseResponse<{ version: number }>(response);
-    return result.version;
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      return mockPutLedger(ledgerId, baseVersion, file);
-    }
-    throw error;
-  }
+  return mockPutLedger(ledgerId, baseVersion, file);
 }
 
 export interface JoinResult {
@@ -97,17 +51,5 @@ export async function joinLedger(
   deviceId: string,
   nickname: string,
 ): Promise<JoinResult> {
-  try {
-    const response = await fetch(`${API_BASE}/invite`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ inviteCode, deviceId, nickname }),
-    });
-    return parseResponse(response);
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      return mockJoinLedger(inviteCode, deviceId, nickname);
-    }
-    throw error;
-  }
+  return mockJoinLedger(inviteCode, deviceId, nickname);
 }

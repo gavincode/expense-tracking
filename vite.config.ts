@@ -3,6 +3,8 @@ import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  // v2-local-file：相对路径，支持放在任意目录/直接打开
+  base: './',
   plugins: [
     vue(),
     VitePWA({

@@ -4,6 +4,8 @@
 
 技术栈：Vue 3 + TypeScript + Vite + Vant 4 + Pinia + Dexie（本地优先），PWA，部署到腾讯 EdgeOne Pages。
 
+> **v2-local-file 分支**：完全离线的纯浏览器版本——不依赖任何后端/数据库，数据全部保存在手机/电脑浏览器里，通过"导出/导入 JSON 文件"备份和传给家人。构建产物为纯静态文件，放到任意静态服务器即可访问。
+
 ## 本地运行
 
 ```bash
@@ -12,6 +14,15 @@ npm run dev
 ```
 
 打开终端输出的本地地址（默认 http://localhost:5173），建议用手机浏览器访问查看移动端效果。
+
+### v2-local-file 纯静态版本
+
+```bash
+npm run build
+npx serve dist        # 或放到任意静态托管（Gitee Pages、Nginx、OSS 等）
+```
+
+页面右上角"导出"下载备份文件（JSON），发给家人后对方点"导入"选择该文件即可查看/继续记账。注意：**导入会覆盖该浏览器现有的数据**。
 
 ## 使用说明
 

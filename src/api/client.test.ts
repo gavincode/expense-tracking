@@ -1,28 +1,28 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { joinLedger } from './client';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createLedger, getLedger, putLedger, joinLedger, VersionConflictError } from './client';
+import { resetMockBackend } from './mockBackend';
 
-describe('api client', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
+describe('local-only client（v2-local-file）', () => {
+  beforeEach(() => {
+    resetMockBackend();
   });
 
-  it('joinLedger 向 /api/invite 发送加入请求并解析结果', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({ ledgerId: 'L1', inviteCode: '123456', members: [] }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
-    );
-    vi.stubGlobal('fetch', fetchMock);
+  it('创建账本后本地读回', async () => {
+    const { ledgerId, inviteCode } = await createLedger();
+    const file = await getLedger(ledgerId);
+    expect(file.ledgerId).toBe(ledgerId);
+    expect(file.inviteCode).toBe(inviteCode);
+    expect(inviteCode).toMatch(/^\d{6}$/);
+  });
 
-    const result = await joinLedger('123456', 'd1', '妈妈');
-    expect(result.ledgerId).toBe('L1');
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toContain('/api/invite');
-    expect(JSON.parse(String(init.body))).toEqual({
-      inviteCode: '123456',
-      deviceId: 'd1',
-      nickname: '妈妈',
-    });
+  it('版本不匹配抛 VersionConflictError', async () => {
+    const { ledgerId } = await createLedger();
+    await expect(putLedger(ledgerId, 99, {} as never)).rejects.toBeInstanceOf(VersionConflictError);
+  });
+
+  it('加入账本写入成员', async () => {
+    const { inviteCode } = await createLedger();
+    const result = await joinLedger(inviteCode, 'd1', '妈妈');
+    expect(result.members[0].nickname).toBe('妈妈');
   });
 });
