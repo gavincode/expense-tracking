@@ -93,6 +93,7 @@ function goBack() {
 }
 
 function goCategories() {
+  showKeyboard.value = false;
   router.push('/categories');
 }
 
