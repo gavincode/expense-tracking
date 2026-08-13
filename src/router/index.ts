@@ -3,6 +3,7 @@ import HomeView from '../pages/HomeView.vue';
 import RecordView from '../pages/RecordView.vue';
 import ListView from '../pages/ListView.vue';
 import DetailView from '../pages/DetailView.vue';
+import CategoryManageView from '../pages/CategoryManageView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,6 +13,7 @@ const router = createRouter({
     { path: '/edit/:id', name: 'edit', component: RecordView },
     { path: '/list', name: 'list', component: ListView },
     { path: '/detail/:id', name: 'detail', component: DetailView },
+    { path: '/categories-manage', name: 'categories-manage', component: CategoryManageView },
   ],
 });
 

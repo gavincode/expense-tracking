@@ -10,7 +10,10 @@
     </div>
 
     <div class="module-card">
-      <div class="module-title">分类</div>
+      <div class="module-title">
+        分类
+        <span class="manage-link" @click="goManage">管理</span>
+      </div>
       <div class="chip-row">
         <button
           v-for="group in allGroups"
@@ -224,7 +227,6 @@ function chipStyle(c: ChipColor): Record<string, string> {
 
 onMounted(async () => {
   await loadCustom();
-  draft.reset();
   if (editingId.value !== null) {
     const record = await getById(editingId.value);
     if (!record) {
@@ -241,6 +243,11 @@ onMounted(async () => {
     });
   }
 });
+
+function goManage() {
+  showKeyboard.value = false;
+  router.push('/categories-manage');
+}
 
 function prefillRecord(record: ExpenseRecord) {
   draft.amount = fromCents(record.amountCents);
@@ -543,6 +550,15 @@ async function save() {
   height: 14px;
   border-radius: 2px;
   background: var(--color-primary);
+}
+
+.module-title .manage-link {
+  margin-left: auto;
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
 }
 
 .module-card .module-title::before {
