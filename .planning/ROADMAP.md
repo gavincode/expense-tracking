@@ -33,10 +33,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. 系统预置装修分类（硬装/软装/家电 / 客厅/厨房等），可直接选用
   4. 手机浏览器中界面简洁美观、全中文，操作清晰
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 - [x] 01-01-PLAN.md
-- [ ] 01-02-PLAN.md
+- [x] 01-02-PLAN.md
 - [ ] 01-03-PLAN.md
 
 **UI hint**: yes
@@ -94,7 +94,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. 快速记账 MVP | 1/3 | In Progress|  |
+| 1. 快速记账 MVP | 2/3 | In Progress|  |
 | 2. 记账完善 | 0/0 | Not started | - |
 | 3. 共享账本与多设备同步 | 0/0 | Not started | - |
 | 4. 统计图表 | 0/0 | Not started | - |

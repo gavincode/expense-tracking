@@ -8,7 +8,7 @@
 ### 记账 (REC)
 
 - [ ] **REC-01**: 用户能在手机上几秒内记下一笔装修支出（金额 + 分类 + 日期，常用项一键选）
-- [ ] **REC-02**: 用户能查看支出列表与单笔支出详情
+- [x] **REC-02**: 用户能查看支出列表与单笔支出详情
 - [ ] **REC-03**: 用户能编辑或删除一笔支出
 - [x] **REC-04**: 系统内置装修分类预设（按阶段/空间：硬装、软装、家电 / 客厅、厨房等）
 - [ ] **REC-05**: 用户能添加自定义分类
@@ -60,7 +60,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | REC-01 | Phase 1 | Pending |
-| REC-02 | Phase 1 | Pending |
+| REC-02 | Phase 1 | Complete |
 | REC-04 | Phase 1 | Complete |
 | UX-01 | Phase 1 | Pending |
 | REC-03 | Phase 2 | Pending |
