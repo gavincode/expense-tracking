@@ -5,6 +5,18 @@
       <p class="home-subtitle">记下每一笔装修开销</p>
     </header>
 
+    <div class="summary-card">
+      <div class="summary-item">
+        <div class="summary-label">本月合计</div>
+        <div class="summary-value">¥{{ fromCents(monthSummary.totalCents) }}</div>
+      </div>
+      <div class="summary-divider" />
+      <div class="summary-item">
+        <div class="summary-label">本月笔数</div>
+        <div class="summary-value">{{ monthSummary.count }}</div>
+      </div>
+    </div>
+
     <template v-if="records.length">
       <div class="section-title">最近记录</div>
       <div class="card">
@@ -16,6 +28,7 @@
           <div class="record-amount">¥{{ fromCents(record.amountCents) }}</div>
         </div>
       </div>
+      <van-button plain round class="see-all" @click="goList">查看全部</van-button>
     </template>
 
     <van-empty v-else description="记下第一笔装修支出" />
@@ -29,18 +42,25 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { listRecent, type ExpenseRecord } from '../db/ledger';
+import { listRecent, getMonthSummary, type ExpenseRecord, type MonthSummary } from '../db/ledger';
 import { fromCents } from '../utils/money';
+import dayjs from 'dayjs';
 
 const router = useRouter();
 const records = ref<ExpenseRecord[]>([]);
+const monthSummary = ref<MonthSummary>({ totalCents: 0, count: 0 });
 
 async function loadRecent() {
   records.value = await listRecent(5);
+  monthSummary.value = await getMonthSummary(dayjs().format('YYYY-MM'));
 }
 
 function goRecord() {
   router.push('/record');
+}
+
+function goList() {
+  router.push('/list');
 }
 
 onMounted(loadRecent);
@@ -68,6 +88,38 @@ onMounted(loadRecent);
   margin: var(--space-md) var(--space-sm) var(--space-sm);
   font-size: var(--font-size-md);
   font-weight: 600;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin: var(--space-sm);
+  padding: var(--space-lg) var(--space-md);
+  background: var(--color-primary-light);
+  border-radius: var(--radius-card);
+}
+
+.summary-item {
+  text-align: center;
+}
+
+.summary-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary-dark);
+}
+
+.summary-value {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.summary-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(143, 174, 139, 0.35);
 }
 
 .card {
@@ -117,5 +169,12 @@ onMounted(loadRecent);
   background: var(--color-bg);
   max-width: 640px;
   margin: 0 auto;
+}
+
+.see-all {
+  margin-top: var(--space-md);
+  width: 100%;
+  color: var(--color-primary-dark);
+  border-color: var(--color-primary);
 }
 </style>
