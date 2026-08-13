@@ -12,16 +12,16 @@
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ 用户在手机上快速记下一笔开销（打开即记、默认数字键盘、常用项一键选）— Phase 1
+- ✓ 开销按装修阶段/空间分类，两级结构（5 组 38 项预设）+ 自定义分类 — Phase 1
+- ✓ 查看支出列表与单笔详情（按日分组、当日小计）— Phase 1
+- ✓ 界面简洁时尚（极简白 + 分类多彩标签体系）、移动端优先、全中文 — Phase 1
 
 ### Active
 
-- [ ] 用户在手机上几秒内就能记下一笔开销（打开即记、常用项一键选）
-- [ ] 开销按装修阶段/空间分类（硬装、软装、家电 / 客厅、厨房等）
 - [ ] 家人通过邀请链接/二维码加入同一个账本，无需登录，多设备同步
 - [ ] 每笔开销显示记录人（设备昵称标识）
-- [ ] 用户可以查看装修全过程的开销汇总与分类明细
-- [ ] 界面简洁时尚、移动端优先，符合女性用户的审美
+- [ ] 用户可以查看装修全过程的开销汇总与统计图表
 
 ### Out of Scope
 
@@ -53,13 +53,14 @@
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| 按装修阶段/空间分类记账 | 贴合装修场景，方便回顾 | — Pending |
+| 按装修阶段/空间分类记账 | 贴合装修场景，方便回顾 | ✓ Good（Phase 1 落地） |
 | 预算功能推迟到 v2 | 先做顺快速记账与共享，预算后续叠加 | — Pending |
 | v1 不做登录，邀请链接 + 设备昵称标识记录人 | 降低家人使用门槛 | — Pending |
-| H5/PWA 而非微信小程序 | 可部署到 EdgeOne，无需微信平台流程 | — Pending |
+| H5/PWA 而非微信小程序 | 可部署到 EdgeOne，无需微信平台流程 | ✓ Good（Phase 1 落地） |
 | 家人共享同一账本（邀请链接/二维码） | 简单直接的协作方式 | — Pending |
-| 快速记账优先（打开即记、常用项一键选） | 移动端高频使用场景 | — Pending |
-| GitHub 管理代码 + EdgeOne 部署 | 用户指定的技术方向 | — Pending |
+| 快速记账优先（打开即记、默认数字键盘） | 移动端高频使用场景 | ✓ Good（Phase 1 落地） |
+| GitHub 管理代码 + EdgeOne 部署 | 用户指定的技术方向 | ✓ Good（配置就绪，部署待用户操作） |
+| 自定义分类提前到 Phase 1 落地 | 真机验证中用户提出，直接满足需求 | ✓ Good |
 
 ## Evolution
 
@@ -79,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-13 after initialization*
+*Last updated: 2026-08-13 after Phase 1（快速记账 MVP）完成*
