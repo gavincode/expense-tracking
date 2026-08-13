@@ -34,9 +34,9 @@
           </button>
         </template>
         <button
+          v-else
           type="button"
-          class="chip cat-chip"
-          :class="{ selected: selected?.categoryId === UNCATEGORIZED.id }"
+          class="chip cat-chip selected"
           :style="chipStyle(UNCATEGORIZED)"
           @click="expandPicker"
         >
@@ -146,7 +146,7 @@
     </van-popup>
 
     <div class="save-area">
-      <van-button type="primary" round block size="large" :disabled="!canSave" @click="save">
+      <van-button type="primary" round block size="large" @click="save">
         {{ isEdit ? '保存修改' : '保存' }}
       </van-button>
     </div>
@@ -252,8 +252,6 @@ const showDatePicker = ref(false);
 const pickerDate = ref<string[]>(draft.date.split('-'));
 const minDate = new Date(2000, 0, 1);
 const maxDate = new Date();
-
-const canSave = computed(() => draft.amount.trim() !== '' && !!selected.value);
 
 interface ChipColor {
   color: string;
