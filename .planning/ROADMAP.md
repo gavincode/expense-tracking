@@ -53,7 +53,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. 用户能删除一笔支出，删除后列表不再显示
   3. 用户能添加自定义分类，并在记账时选用
 
-**Plans**: TBD
+**Plans**: 3/3 plans executed
+
+- [x] 02-01-PLAN.md
+- [x] 02-02-PLAN.md
+- [x] 02-03-PLAN.md
+
 **UI hint**: yes
 
 ### Phase 3: 共享账本与多设备同步
@@ -95,6 +100,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. 快速记账 MVP | 3/3 | Complete    | 2026-08-13 |
-| 2. 记账完善 | 0/0 | Not started | - |
+| 2. 记账完善 | 3/3 | In Progress|  |
 | 3. 共享账本与多设备同步 | 0/0 | Not started | - |
 | 4. 统计图表 | 0/0 | Not started | - |
