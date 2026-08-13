@@ -8,6 +8,8 @@ import {
   getMonthSummary,
   addCustomCategory,
   listCustomCategories,
+  updateExpense,
+  getById,
 } from './ledger';
 import { toCents, fromCents } from '../utils/money';
 
@@ -91,5 +93,31 @@ describe('ledger db', () => {
     expect(group?.groupId).toBeNull();
     const child = all.find((c) => c.id === 'custom-child-1');
     expect(child?.groupId).toBe('custom-group-1');
+  });
+
+  it('updateExpense 更新字段且保留 createdAt', async () => {
+    const id = await addExpense({
+      amountCents: 10000,
+      categoryId: 'hardin-plumbing',
+      categoryPath: '硬装/水电',
+      date: '2026-08-01',
+      note: '定金',
+    });
+    const before = await getById(id);
+    const createdAt = before?.createdAt;
+    await updateExpense(id, {
+      amountCents: 15000,
+      categoryId: 'hardin-tile',
+      categoryPath: '硬装/瓦工',
+      date: '2026-08-02',
+      note: '尾款',
+    });
+    const after = await getById(id);
+    expect(after?.amountCents).toBe(15000);
+    expect(after?.categoryPath).toBe('硬装/瓦工');
+    expect(after?.date).toBe('2026-08-02');
+    expect(after?.note).toBe('尾款');
+    expect(after?.createdAt).toBe(createdAt);
+    expect(after?.updatedAt).toBeGreaterThanOrEqual(before?.updatedAt ?? 0);
   });
 });
