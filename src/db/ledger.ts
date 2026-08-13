@@ -9,6 +9,7 @@ export interface ExpenseRecord {
   note: string;
   createdAt: number;
   updatedAt: number;
+  deleted?: number; // 0 = 正常, 1 = 已删除（软删除 tombstone）
 }
 
 export interface CustomCategory {
@@ -34,6 +35,10 @@ class LedgerDB extends Dexie {
       expenses: '++id, date, categoryId, createdAt, updatedAt',
       categories: 'id, groupId, createdAt',
     });
+    this.version(3).stores({
+      expenses: '++id, date, categoryId, createdAt, updatedAt, deleted',
+      categories: 'id, groupId, createdAt, deleted',
+    });
   }
 }
 
@@ -54,6 +59,7 @@ export async function addExpense(input: NewExpense): Promise<number> {
     note: input.note ?? '',
     createdAt: now,
     updatedAt: now,
+    deleted: 0,
   });
 }
 
@@ -65,17 +71,20 @@ export async function updateExpense(
 }
 
 export async function listRecent(limit = 5): Promise<ExpenseRecord[]> {
-  const rows = await db.expenses.orderBy('date').reverse().limit(limit).toArray();
+  const rows = (await db.expenses.orderBy('date').reverse().toArray())
+    .filter((r) => !r.deleted)
+    .slice(0, limit);
   return rows.sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
 }
 
 export async function listAll(): Promise<ExpenseRecord[]> {
-  const rows = await db.expenses.orderBy('date').reverse().toArray();
+  const rows = (await db.expenses.orderBy('date').reverse().toArray()).filter((r) => !r.deleted);
   return rows.sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
 }
 
 export async function getById(id: number): Promise<ExpenseRecord | undefined> {
-  return db.expenses.get(id);
+  const record = await db.expenses.get(id);
+  return record && !record.deleted ? record : undefined;
 }
 
 export interface MonthSummary {
@@ -84,11 +93,17 @@ export interface MonthSummary {
 }
 
 export async function getMonthSummary(yearMonth: string): Promise<MonthSummary> {
-  const rows = await db.expenses.where('date').startsWith(yearMonth).toArray();
+  const rows = (await db.expenses.where('date').startsWith(yearMonth).toArray()).filter(
+    (r) => !r.deleted,
+  );
   return {
     totalCents: rows.reduce((sum, r) => sum + r.amountCents, 0),
     count: rows.length,
   };
+}
+
+export async function deleteExpense(id: number): Promise<void> {
+  await db.expenses.update(id, { deleted: 1, updatedAt: Date.now() });
 }
 
 export async function addCustomCategory(

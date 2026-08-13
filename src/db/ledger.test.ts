@@ -10,6 +10,7 @@ import {
   listCustomCategories,
   updateExpense,
   getById,
+  deleteExpense,
 } from './ledger';
 import { toCents, fromCents } from '../utils/money';
 
@@ -119,5 +120,24 @@ describe('ledger db', () => {
     expect(after?.note).toBe('尾款');
     expect(after?.createdAt).toBe(createdAt);
     expect(after?.updatedAt).toBeGreaterThanOrEqual(before?.updatedAt ?? 0);
+  });
+
+  it('deleteExpense 软删除：视图过滤、表中保留', async () => {
+    const id = await addExpense({
+      amountCents: 8800,
+      categoryId: 'hardin-paint',
+      categoryPath: '硬装/油漆',
+      date: '2026-08-06',
+      note: '乳胶漆',
+    });
+    await deleteExpense(id);
+    expect(await listAll()).toHaveLength(0);
+    expect(await listRecent()).toHaveLength(0);
+    expect(await getById(id)).toBeUndefined();
+    const summary = await getMonthSummary('2026-08');
+    expect(summary.count).toBe(0);
+    expect(summary.totalCents).toBe(0);
+    const raw = await db.expenses.get(id);
+    expect(raw?.deleted).toBe(1);
   });
 });
