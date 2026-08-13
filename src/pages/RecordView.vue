@@ -9,8 +9,8 @@
       </span>
     </div>
 
-    <section class="picker-section">
-      <div class="section-label">分类</div>
+    <div class="module-card">
+      <div class="module-title">分类</div>
       <div class="chip-row">
         <button
           v-for="group in groups"
@@ -33,7 +33,7 @@
       </div>
 
       <template v-if="activeGroup">
-        <div class="section-label sub">项目</div>
+        <div class="module-subtitle">项目</div>
         <div class="chip-row">
           <button
             v-for="child in activeGroup.children"
@@ -49,10 +49,10 @@
       </template>
 
       <div v-if="selected" class="selected-path">已选：{{ selected.path }}</div>
-    </section>
+    </div>
 
-    <section class="picker-section">
-      <div class="section-label">备注</div>
+    <div class="module-card note-module">
+      <div class="module-title">备注</div>
       <van-field
         v-model="draft.note"
         type="textarea"
@@ -67,16 +67,22 @@
           v-for="tag in noteTags"
           :key="tag"
           type="button"
-          class="chip"
+          class="chip note-chip"
           :class="{ selected: isNoteTagSelected(tag) }"
           @click="toggleNoteTag(tag)"
         >
           {{ tag }}
         </button>
       </div>
-    </section>
+    </div>
 
-    <van-cell title="日期" is-link :value="draft.date" @click="openDatePicker" />
+    <div class="module-card date-module" @click="openDatePicker">
+      <div class="module-title">日期</div>
+      <div class="date-row">
+        <span class="date-value">{{ draft.date }}</span>
+        <span class="chevron">›</span>
+      </div>
+    </div>
 
     <div class="save-area">
       <van-button type="primary" round block size="large" :disabled="!canSave" @click="save">
@@ -295,25 +301,49 @@ async function save() {
   color: var(--color-text-secondary);
 }
 
-.picker-section {
+.module-card {
   margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
 }
 
-.section-label {
-  margin: 0 var(--space-sm) var(--space-xs);
+.module-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.module-title::before {
+  content: '';
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+.module-card .module-title::before {
+  background: var(--color-primary);
+}
+
+.module-card.note-module .module-title::before {
+  background: var(--color-accent);
+}
+
+.module-subtitle {
+  margin: var(--space-sm) var(--space-xs) var(--space-xs);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
-}
-
-.section-label.sub {
-  margin-top: var(--space-sm);
 }
 
 .chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
-  padding: 0 var(--space-sm);
 }
 
 .chip {
@@ -336,10 +366,37 @@ async function save() {
   font-weight: 500;
 }
 
+.chip.note-chip.selected {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+  color: var(--color-accent-dark);
+}
+
 .selected-path {
-  margin: var(--space-sm);
+  margin-top: var(--space-sm);
   font-size: var(--font-size-sm);
   color: var(--color-primary-dark);
+}
+
+.date-module {
+  cursor: pointer;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+}
+
+.date-value {
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+}
+
+.chevron {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
 }
 
 .save-area {
