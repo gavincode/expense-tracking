@@ -182,7 +182,7 @@ const activeChildren = computed<CategoryChild[]>(() => {
   return [...activeGroup.value.children, ...customs];
 });
 
-const showKeyboard = ref(false);
+const showKeyboard = ref(true);
 const showDatePicker = ref(false);
 const pickerDate = ref<string[]>(draft.date.split('-'));
 const minDate = new Date(2000, 0, 1);
@@ -237,12 +237,14 @@ async function loadCustom() {
 }
 
 function openAddGroup() {
+  showKeyboard.value = false;
   addMode.value = 'group';
   newName.value = '';
   addPopup.value = true;
 }
 
 function openAddChild() {
+  showKeyboard.value = false;
   addMode.value = 'child';
   newName.value = '';
   addPopup.value = true;
@@ -359,6 +361,7 @@ function onDelete() {
 }
 
 function openDatePicker() {
+  showKeyboard.value = false;
   pickerDate.value = draft.date.split('-');
   showDatePicker.value = true;
 }
