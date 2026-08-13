@@ -247,12 +247,41 @@ async function openInvitePopup() {
   }
 }
 
-async function copyInviteLink() {
+function fallbackCopy(text: string): boolean {
   try {
-    await navigator.clipboard.writeText(inviteLink.value);
-    showToast('链接已复制');
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
   } catch {
-    showToast('复制失败，请手动复制下方链接');
+    return false;
+  }
+}
+
+async function copyInviteLink() {
+  const text = inviteLink.value;
+  try {
+    // 安全环境（HTTPS/localhost）下用标准剪贴板 API
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      showToast('链接已复制');
+      return;
+    }
+  } catch {
+    // 非安全环境降级到下方兼容方案
+  }
+  if (fallbackCopy(text)) {
+    showToast('链接已复制');
+  } else {
+    showToast('复制失败，请长按下方链接手动复制');
   }
 }
 
