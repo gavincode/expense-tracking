@@ -27,4 +27,14 @@ describe('preset categories', () => {
       }
     }
   });
+
+  it('每组一级分类拥有不同的主题色', () => {
+    const colors = PRESET_CATEGORIES.map((g) => g.color);
+    expect(new Set(colors).size).toBe(colors.length);
+    for (const group of PRESET_CATEGORIES) {
+      expect(group.color).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(group.colorLight).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(group.colorDark).toMatch(/^#[0-9a-fA-F]{6}$/);
+    }
+  });
 });

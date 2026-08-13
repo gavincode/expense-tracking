@@ -6,6 +6,9 @@ export interface CategoryChild {
 export interface CategoryGroup {
   id: string;
   name: string;
+  color: string;
+  colorLight: string;
+  colorDark: string;
   children: CategoryChild[];
 }
 
@@ -13,6 +16,9 @@ export interface CategoryGroup {
 export const UNCATEGORIZED = {
   id: 'uncategorized',
   name: '未分类',
+  color: '#9e9e9e',
+  colorLight: '#efefef',
+  colorDark: '#757575',
 } as const;
 
 /** 用户确认的 5 组一级 + 38 项二级预设（D-06；仅阶段维度 D-07）。 */
@@ -20,6 +26,9 @@ export const PRESET_CATEGORIES: CategoryGroup[] = [
   {
     id: 'hardin',
     name: '硬装',
+    color: '#8fae8b',
+    colorLight: '#eaf1ea',
+    colorDark: '#6f9271',
     children: [
       { id: 'hardin-contract', name: '合同款项' },
       { id: 'hardin-demo', name: '拆改' },
@@ -37,6 +46,9 @@ export const PRESET_CATEGORIES: CategoryGroup[] = [
   {
     id: 'materials',
     name: '主材',
+    color: '#c2a17a',
+    colorLight: '#f7f0e6',
+    colorDark: '#9c7a52',
     children: [
       { id: 'materials-tile', name: '瓷砖' },
       { id: 'materials-floor', name: '地板' },
@@ -53,6 +65,9 @@ export const PRESET_CATEGORIES: CategoryGroup[] = [
   {
     id: 'equipment',
     name: '设备系统',
+    color: '#7fa8c9',
+    colorLight: '#eaf2f9',
+    colorDark: '#57809f',
     children: [
       { id: 'equipment-heating', name: '地暖' },
       { id: 'equipment-freshair', name: '新风' },
@@ -65,6 +80,9 @@ export const PRESET_CATEGORIES: CategoryGroup[] = [
   {
     id: 'soft',
     name: '软装家电',
+    color: '#d9a0a9',
+    colorLight: '#fbeff0',
+    colorDark: '#b37783',
     children: [
       { id: 'soft-furniture', name: '家具' },
       { id: 'soft-appliance', name: '家电' },
@@ -76,6 +94,9 @@ export const PRESET_CATEGORIES: CategoryGroup[] = [
   {
     id: 'misc',
     name: '杂项',
+    color: '#a8a29a',
+    colorLight: '#f2f0ed',
+    colorDark: '#7e7870',
     children: [
       { id: 'misc-hardware', name: '五金' },
       { id: 'misc-materials', name: '辅材杂料' },

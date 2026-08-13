@@ -18,6 +18,7 @@
           type="button"
           class="chip cat-chip"
           :class="{ selected: activeGroup?.id === group.id }"
+          :style="chipStyle(group)"
           @click="selectGroup(group)"
         >
           {{ group.name }}
@@ -26,6 +27,7 @@
           type="button"
           class="chip cat-chip"
           :class="{ selected: !activeGroup && selected?.categoryId === UNCATEGORIZED.id }"
+          :style="chipStyle(UNCATEGORIZED)"
           @click="selectUncategorized"
         >
           {{ UNCATEGORIZED.name }}
@@ -33,7 +35,10 @@
       </div>
 
       <template v-if="activeGroup">
-        <div class="module-subtitle">项目</div>
+        <div class="module-subtitle">
+          <span class="dot" :style="{ background: activeGroup.color }" />
+          项目
+        </div>
         <div class="chip-row">
           <button
             v-for="child in activeGroup.children"
@@ -41,6 +46,7 @@
             type="button"
             class="chip cat-chip"
             :class="{ selected: selectedChild?.id === child.id }"
+            :style="chipStyle(activeGroup)"
             @click="selectChild(child)"
           >
             {{ child.name }}
@@ -48,7 +54,13 @@
         </div>
       </template>
 
-      <div v-if="selected" class="selected-path">已选：{{ selected.path }}</div>
+      <div
+        v-if="selected"
+        class="selected-path"
+        :style="activeGroup ? { color: activeGroup.colorDark } : {}"
+      >
+        已选：{{ selected.path }}
+      </div>
     </div>
 
     <div class="module-card note-module">
@@ -121,7 +133,12 @@ import { showToast } from 'vant';
 import { storeToRefs } from 'pinia';
 import { useCategoryStore } from '../stores/category';
 import { useDraftStore } from '../stores/draft';
-import { PRESET_CATEGORIES, UNCATEGORIZED, type CategoryGroup, type CategoryChild } from '../data/categories';
+import {
+  PRESET_CATEGORIES,
+  UNCATEGORIZED,
+  type CategoryGroup,
+  type CategoryChild,
+} from '../data/categories';
 import { NOTE_TAGS } from '../data/note-tags';
 import { addExpense } from '../db/ledger';
 import { toCents } from '../utils/money';
@@ -143,6 +160,20 @@ const minDate = new Date(2000, 0, 1);
 const maxDate = new Date();
 
 const canSave = computed(() => draft.amount.trim() !== '' && !!selected.value);
+
+interface ChipColor {
+  color: string;
+  colorLight: string;
+  colorDark: string;
+}
+
+function chipStyle(c: ChipColor): Record<string, string> {
+  return {
+    '--group-color': c.color,
+    '--group-color-light': c.colorLight,
+    '--group-color-dark': c.colorDark,
+  };
+}
 
 onMounted(() => {
   if (!selected.value) {
@@ -343,12 +374,11 @@ async function save() {
   color: var(--color-text-secondary);
 }
 
-.module-subtitle::before {
-  content: '';
+.module-subtitle .dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--color-primary);
+  display: inline-block;
 }
 
 .chip-row {
@@ -371,14 +401,14 @@ async function save() {
 }
 
 .chip.cat-chip {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  background: var(--group-color-light, var(--color-primary-light));
+  border-color: var(--group-color-light, var(--color-primary-light));
+  color: var(--group-color-dark, var(--color-primary-dark));
 }
 
 .chip.cat-chip.selected {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--group-color, var(--color-primary));
+  border-color: var(--group-color, var(--color-primary));
   color: #ffffff;
   font-weight: 600;
 }
