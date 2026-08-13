@@ -14,7 +14,7 @@
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: 快速记账 MVP** - 打开就能 3 秒记一笔，看到支出列表 (completed 2026-08-13)
-- [ ] **Phase 2: 记账完善** - 编辑/删除支出，自定义分类
+- [x] **Phase 2: 记账完善** - 编辑/删除支出，自定义分类 (completed 2026-08-14)
 - [ ] **Phase 3: 共享账本与多设备同步** - 邀请家人加入同一账本，数据多端一致
 - [ ] **Phase 4: 统计图表** - 看清装修总花费与花在哪
 
@@ -100,6 +100,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. 快速记账 MVP | 3/3 | Complete    | 2026-08-13 |
-| 2. 记账完善 | 3/3 | In Progress|  |
+| 2. 记账完善 | 3/3 | Complete    | 2026-08-14 |
 | 3. 共享账本与多设备同步 | 0/0 | Not started | - |
 | 4. 统计图表 | 0/0 | Not started | - |

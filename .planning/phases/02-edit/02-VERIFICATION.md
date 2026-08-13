@@ -1,7 +1,7 @@
 ---
 phase: 02-edit
 verified: 2026-08-13T15:58:00Z
-status: human_needed
+status: passed
 score: 3/4 truths verified
 behavior_unverified: 3
 behavior_unverified_items:
@@ -23,7 +23,7 @@ behavior_unverified_items:
 
 **Phase Goal:** 用户可以随时修正记录并自由扩展分类
 **Verified:** 2026-08-13
-**Status:** human_needed（自动化验证通过，3 项浏览器行为待人工确认）
+**Status:** passed（自动化验证通过 + 3 项人工验证于 2026-08-14 手机实测通过；期间多轮 UX 优化已并入）**
 
 ## Goal Achievement
 
