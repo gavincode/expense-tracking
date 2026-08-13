@@ -35,15 +35,20 @@ export async function onRequestPost(context: {
       return json({ error: 'unsupported action' }, 400);
     }
     const ledgerId = crypto.randomUUID();
+    const inviteCode = randomInviteCode();
     const file: LedgerFile = {
       version: 1,
       ledgerId,
-      inviteCode: randomInviteCode(),
+      inviteCode,
       members: [],
       records: [],
       categories: [],
     };
     await store(context).set(ledgerKey(ledgerId), JSON.stringify(file));
+    await store(context).set(
+      `invites/${inviteCode}.json`,
+      JSON.stringify({ ledgerId, createdAt: Date.now() }),
+    );
     return json({ ledgerId, inviteCode: file.inviteCode });
   } catch (error) {
     return json({ error: String(error) }, 500);

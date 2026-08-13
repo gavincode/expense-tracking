@@ -58,3 +58,22 @@ export async function putLedger(
   const result = await parseResponse<{ version: number }>(response);
   return result.version;
 }
+
+export interface JoinResult {
+  ledgerId: string;
+  inviteCode: string;
+  members: { deviceId: string; nickname: string; joinedAt: number }[];
+}
+
+export async function joinLedger(
+  inviteCode: string,
+  deviceId: string,
+  nickname: string,
+): Promise<JoinResult> {
+  const response = await fetch(`${API_BASE}/invite`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ inviteCode, deviceId, nickname }),
+  });
+  return parseResponse(response);
+}
