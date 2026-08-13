@@ -15,11 +15,40 @@
       @click="goCategories"
     />
 
+    <van-cell
+      title="日期"
+      is-link
+      :value="date"
+      @click="showDatePicker = true"
+    />
+
+    <van-field
+      v-model="note"
+      type="textarea"
+      label="备注"
+      placeholder="选填，如：定金、尾款"
+      rows="2"
+      autosize
+      maxlength="200"
+      show-word-limit
+    />
+
     <div class="save-area">
       <van-button type="primary" round block size="large" :disabled="!canSave" @click="save">
         保存
       </van-button>
     </div>
+
+    <van-popup v-model:show="showDatePicker" position="bottom" round>
+      <van-date-picker
+        v-model="pickerDate"
+        title="选择日期"
+        :min-date="minDate"
+        :max-date="maxDate"
+        @confirm="onDateConfirm"
+        @cancel="showDatePicker = false"
+      />
+    </van-popup>
 
     <van-number-keyboard
       :model-value="amount"
@@ -49,7 +78,13 @@ const categoryStore = useCategoryStore();
 const { selected } = storeToRefs(categoryStore);
 
 const amount = ref('');
+const note = ref('');
 const showKeyboard = ref(true);
+const showDatePicker = ref(false);
+const date = ref(dayjs().format('YYYY-MM-DD'));
+const pickerDate = ref<string[]>(dayjs().format('YYYY-MM-DD').split('-'));
+const minDate = new Date(2000, 0, 1);
+const maxDate = new Date();
 
 const canSave = computed(() => amount.value.trim() !== '' && !!selected.value);
 
@@ -85,6 +120,11 @@ function onDelete() {
   amount.value = amount.value.slice(0, -1);
 }
 
+function onDateConfirm({ selectedValues }: { selectedValues: string[] }) {
+  date.value = selectedValues.join('-');
+  showDatePicker.value = false;
+}
+
 async function save() {
   let amountCents: number;
   try {
@@ -101,7 +141,8 @@ async function save() {
     amountCents,
     categoryId: selected.value.categoryId,
     categoryPath: selected.value.path,
-    date: dayjs().format('YYYY-MM-DD'),
+    date: date.value,
+    note: note.value,
   });
   showToast('已保存');
   router.push('/');

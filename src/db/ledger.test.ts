@@ -37,4 +37,17 @@ describe('ledger db', () => {
     expect(summary.totalCents).toBe(10000);
     expect(summary.count).toBe(1);
   });
+
+  it('含日期与备注的记录可完整读回', async () => {
+    await addExpense({
+      amountCents: 360000,
+      categoryId: 'hardin-tile',
+      categoryPath: '硬装/瓦工',
+      date: '2026-08-05',
+      note: '瓷砖铺贴尾款',
+    });
+    const recent = await listRecent();
+    expect(recent[0].date).toBe('2026-08-05');
+    expect(recent[0].note).toBe('瓷砖铺贴尾款');
+  });
 });
