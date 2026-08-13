@@ -14,49 +14,82 @@
         分类
         <span class="manage-link" @click="goManage">管理</span>
       </div>
-      <div class="chip-row">
+      <div v-if="isCollapsed" class="chip-row">
+        <template v-if="bothLevelsSelected">
+          <button
+            type="button"
+            class="chip cat-chip selected"
+            :style="chipStyle(activeGroup!)"
+            @click="expandPicker"
+          >
+            {{ activeGroup?.name }}
+          </button>
+          <button
+            type="button"
+            class="chip cat-chip selected"
+            :style="chipStyle(activeGroup!)"
+            @click="expandPicker"
+          >
+            {{ selectedChild?.name }}
+          </button>
+        </template>
         <button
-          v-for="group in allGroups"
-          :key="group.id"
           type="button"
           class="chip cat-chip"
-          :class="{ selected: activeGroup?.id === group.id }"
-          :style="chipStyle(group)"
-          @click="selectGroup(group)"
-        >
-          {{ group.name }}
-        </button>
-        <button
-          type="button"
-          class="chip cat-chip"
-          :class="{ selected: !activeGroup && selected?.categoryId === UNCATEGORIZED.id }"
+          :class="{ selected: selected?.categoryId === UNCATEGORIZED.id }"
           :style="chipStyle(UNCATEGORIZED)"
-          @click="selectUncategorized"
+          @click="expandPicker"
         >
           {{ UNCATEGORIZED.name }}
         </button>
-        <button type="button" class="chip add-chip" @click="openAddGroup">+ 添加一级</button>
+        <span class="expand-hint" @click="expandPicker">修改 ›</span>
       </div>
 
-      <template v-if="activeGroup">
-        <div class="module-subtitle">
-          <span class="dot" :style="{ background: activeGroup.color }" />
-          项目
-        </div>
+      <template v-else>
         <div class="chip-row">
           <button
-            v-for="child in activeChildren"
-            :key="child.id"
+            v-for="group in allGroups"
+            :key="group.id"
             type="button"
             class="chip cat-chip"
-            :class="{ selected: selectedChild?.id === child.id }"
-            :style="chipStyle(activeGroup)"
-            @click="selectChild(child)"
+            :class="{ selected: activeGroup?.id === group.id }"
+            :style="chipStyle(group)"
+            @click="selectGroup(group)"
           >
-            {{ child.name }}
+            {{ group.name }}
           </button>
-          <button type="button" class="chip add-chip" @click="openAddChild">+ 添加项目</button>
+          <button
+            type="button"
+            class="chip cat-chip"
+            :class="{ selected: !activeGroup && selected?.categoryId === UNCATEGORIZED.id }"
+            :style="chipStyle(UNCATEGORIZED)"
+            @click="selectUncategorized"
+          >
+            {{ UNCATEGORIZED.name }}
+          </button>
+          <button type="button" class="chip add-chip" @click="openAddGroup">+ 添加一级</button>
         </div>
+
+        <template v-if="activeGroup">
+          <div class="module-subtitle">
+            <span class="dot" :style="{ background: activeGroup.color }" />
+            项目
+          </div>
+          <div class="chip-row">
+            <button
+              v-for="child in activeChildren"
+              :key="child.id"
+              type="button"
+              class="chip cat-chip"
+              :class="{ selected: selectedChild?.id === child.id }"
+              :style="chipStyle(activeGroup)"
+              @click="selectChild(child)"
+            >
+              {{ child.name }}
+            </button>
+            <button type="button" class="chip add-chip" @click="openAddChild">+ 添加项目</button>
+          </div>
+        </template>
       </template>
 
       <div
@@ -183,6 +216,7 @@ const selectedChild = ref<CategoryChild | null>(null);
 const addPopup = ref(false);
 const addMode = ref<'group' | 'child'>('group');
 const newName = ref('');
+const pickerExpanded = ref(false);
 
 const editingId = computed<number | null>(() => {
   if (route.name !== 'edit') {
@@ -192,6 +226,16 @@ const editingId = computed<number | null>(() => {
   return Number.isFinite(id) ? id : null;
 });
 const isEdit = computed(() => editingId.value !== null);
+
+const bothLevelsSelected = computed(
+  () => activeGroup.value !== null && selectedChild.value !== null,
+);
+
+const isCollapsed = computed(
+  () =>
+    !pickerExpanded.value &&
+    (bothLevelsSelected.value || selected.value?.categoryId === UNCATEGORIZED.id),
+);
 
 const allGroups = computed<CategoryGroup[]>(() => [...groups, ...customGroups.value]);
 
@@ -373,6 +417,7 @@ function goBack() {
 }
 
 function selectGroup(group: CategoryGroup) {
+  pickerExpanded.value = true;
   if (activeGroup.value?.id === group.id) {
     activeGroup.value = null;
     return;
@@ -391,6 +436,7 @@ function selectChild(child: CategoryChild) {
     name: child.name,
     path: `${activeGroup.value.name}/${child.name}`,
   });
+  pickerExpanded.value = false;
 }
 
 function selectUncategorized() {
@@ -401,6 +447,11 @@ function selectUncategorized() {
     name: UNCATEGORIZED.name,
     path: UNCATEGORIZED.name,
   });
+  pickerExpanded.value = false;
+}
+
+function expandPicker() {
+  pickerExpanded.value = true;
 }
 
 function onInput(key: string) {
@@ -635,6 +686,16 @@ async function save() {
   border-style: dashed;
   border-color: var(--color-text-secondary);
   color: var(--color-text-secondary);
+}
+
+.expand-hint {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  min-height: 32px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
 }
 
 .selected-path {
