@@ -16,6 +16,9 @@
 - ✓ 开销按装修阶段/空间分类，两级结构（5 组 38 项预设）+ 自定义分类 — Phase 1
 - ✓ 查看支出列表与单笔详情（按日分组、当日小计）— Phase 1
 - ✓ 界面简洁时尚（极简白 + 分类多彩标签体系）、移动端优先、全中文 — Phase 1
+- ✓ 用户可编辑已有支出（金额/分类/日期/备注），保存后列表/详情同步更新 — Phase 2
+- ✓ 用户可删除支出（左滑或详情页删除，二次确认，软删除）— Phase 2
+- ✓ 自定义分类可管理（添加/重命名/删除），历史支出不受影响 — Phase 2
 
 ### Active
 
@@ -61,6 +64,7 @@
 | 快速记账优先（打开即记、默认数字键盘） | 移动端高频使用场景 | ✓ Good（Phase 1 落地） |
 | GitHub 管理代码 + EdgeOne 部署 | 用户指定的技术方向 | ✓ Good（配置就绪，部署待用户操作） |
 | 自定义分类提前到 Phase 1 落地 | 真机验证中用户提出，直接满足需求 | ✓ Good |
+| 点击记录直达编辑页 + 列表左滑删除 | 真机验证中用户提出的快捷操作链 | ✓ Good |
 
 ## Evolution
 
@@ -80,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-13 after Phase 1（快速记账 MVP）完成*
+*Last updated: 2026-08-14 after Phase 2（记账完善）完成*
