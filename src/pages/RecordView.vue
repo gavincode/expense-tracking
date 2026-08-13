@@ -279,12 +279,15 @@ onMounted(async () => {
       return;
     }
     prefillRecord(record);
-  } else if (!selected.value) {
-    categoryStore.setSelected({
-      categoryId: UNCATEGORIZED.id,
-      name: UNCATEGORIZED.name,
-      path: UNCATEGORIZED.name,
-    });
+  } else {
+    if (!selected.value) {
+      categoryStore.setSelected({
+        categoryId: UNCATEGORIZED.id,
+        name: UNCATEGORIZED.name,
+        path: UNCATEGORIZED.name,
+      });
+    }
+    pickerExpanded.value = true;
   }
 });
 
