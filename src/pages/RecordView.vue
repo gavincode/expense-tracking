@@ -4,34 +4,79 @@
 
     <div class="amount-box" @click="showKeyboard = true">
       <span class="currency">¥</span>
-      <span class="amount" :class="{ placeholder: !amount }">{{ amount || '0.00' }}</span>
+      <span class="amount" :class="{ placeholder: !draft.amount }">
+        {{ draft.amount || '0.00' }}
+      </span>
     </div>
 
-    <van-cell
-      title="分类"
-      is-link
-      :value="selected?.path ?? '请选择'"
-      :value-class="selected ? '' : 'placeholder-value'"
-      @click="goCategories"
-    />
+    <section class="picker-section">
+      <div class="section-label">分类</div>
+      <div class="chip-row">
+        <button
+          type="button"
+          class="chip"
+          :class="{ selected: !activeGroup && selected?.categoryId === UNCATEGORIZED.id }"
+          @click="selectUncategorized"
+        >
+          {{ UNCATEGORIZED.name }}
+        </button>
+        <button
+          v-for="group in groups"
+          :key="group.id"
+          type="button"
+          class="chip"
+          :class="{ selected: activeGroup?.id === group.id }"
+          @click="selectGroup(group)"
+        >
+          {{ group.name }}
+        </button>
+      </div>
 
-    <van-cell
-      title="日期"
-      is-link
-      :value="date"
-      @click="openDatePicker"
-    />
+      <template v-if="activeGroup">
+        <div class="section-label sub">项目</div>
+        <div class="chip-row">
+          <button
+            v-for="child in activeGroup.children"
+            :key="child.id"
+            type="button"
+            class="chip"
+            :class="{ selected: selectedChild?.id === child.id }"
+            @click="selectChild(child)"
+          >
+            {{ child.name }}
+          </button>
+        </div>
+      </template>
 
-    <van-field
-      v-model="note"
-      type="textarea"
-      label="备注"
-      placeholder="选填，如：定金、尾款"
-      rows="2"
-      autosize
-      maxlength="200"
-      show-word-limit
-    />
+      <div v-if="selected" class="selected-path">已选：{{ selected.path }}</div>
+    </section>
+
+    <van-cell title="日期" is-link :value="draft.date" @click="openDatePicker" />
+
+    <section class="picker-section">
+      <div class="section-label">备注</div>
+      <van-field
+        v-model="draft.note"
+        type="textarea"
+        placeholder="选填，如：定金、尾款"
+        rows="2"
+        autosize
+        maxlength="200"
+        show-word-limit
+      />
+      <div class="chip-row">
+        <button
+          v-for="tag in noteTags"
+          :key="tag"
+          type="button"
+          class="chip"
+          :class="{ selected: isNoteTagSelected(tag) }"
+          @click="toggleNoteTag(tag)"
+        >
+          {{ tag }}
+        </button>
+      </div>
+    </section>
 
     <div class="save-area">
       <van-button type="primary" round block size="large" :disabled="!canSave" @click="save">
@@ -51,7 +96,7 @@
     </van-popup>
 
     <van-number-keyboard
-      :model-value="amount"
+      :model-value="draft.amount"
       :show="showKeyboard"
       theme="custom"
       close-button-text="完成"
@@ -64,36 +109,82 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
 import { storeToRefs } from 'pinia';
 import { useCategoryStore } from '../stores/category';
 import { useDraftStore } from '../stores/draft';
+import { PRESET_CATEGORIES, UNCATEGORIZED, type CategoryGroup, type CategoryChild } from '../data/categories';
+import { NOTE_TAGS } from '../data/note-tags';
 import { addExpense } from '../db/ledger';
 import { toCents } from '../utils/money';
 
 const router = useRouter();
 const categoryStore = useCategoryStore();
 const { selected } = storeToRefs(categoryStore);
-
 const draft = useDraftStore();
-const { amount, note, date } = storeToRefs(draft);
+
+const groups = PRESET_CATEGORIES;
+const noteTags = NOTE_TAGS;
+const activeGroup = ref<CategoryGroup | null>(null);
+const selectedChild = ref<CategoryChild | null>(null);
+
 const showKeyboard = ref(false);
 const showDatePicker = ref(false);
 const pickerDate = ref<string[]>(draft.date.split('-'));
 const minDate = new Date(2000, 0, 1);
 const maxDate = new Date();
 
-const canSave = computed(() => amount.value.trim() !== '' && !!selected.value);
+const canSave = computed(() => draft.amount.trim() !== '' && !!selected.value);
+
+onMounted(() => {
+  if (!selected.value) {
+    categoryStore.setSelected({
+      categoryId: UNCATEGORIZED.id,
+      name: UNCATEGORIZED.name,
+      path: UNCATEGORIZED.name,
+    });
+  }
+});
 
 function goBack() {
-  router.back();
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/');
+  }
 }
 
-function goCategories() {
-  showKeyboard.value = false;
-  router.push('/categories');
+function selectGroup(group: CategoryGroup) {
+  if (activeGroup.value?.id === group.id) {
+    activeGroup.value = null;
+    return;
+  }
+  activeGroup.value = group;
+  selectedChild.value = null;
+}
+
+function selectChild(child: CategoryChild) {
+  if (!activeGroup.value) {
+    return;
+  }
+  selectedChild.value = child;
+  categoryStore.setSelected({
+    categoryId: child.id,
+    name: child.name,
+    path: `${activeGroup.value.name}/${child.name}`,
+  });
+}
+
+function selectUncategorized() {
+  activeGroup.value = null;
+  selectedChild.value = null;
+  categoryStore.setSelected({
+    categoryId: UNCATEGORIZED.id,
+    name: UNCATEGORIZED.name,
+    path: UNCATEGORIZED.name,
+  });
 }
 
 function onInput(key: string) {
@@ -130,6 +221,27 @@ function onDateConfirm({ selectedValues }: { selectedValues: string[] }) {
   showDatePicker.value = false;
 }
 
+function isNoteTagSelected(tag: string): boolean {
+  return draft.note
+    .split('、')
+    .map((s) => s.trim())
+    .includes(tag);
+}
+
+function toggleNoteTag(tag: string) {
+  const parts = draft.note
+    .split('、')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const index = parts.indexOf(tag);
+  if (index >= 0) {
+    parts.splice(index, 1);
+  } else {
+    parts.push(tag);
+  }
+  draft.note = parts.join('、');
+}
+
 async function save() {
   let amountCents: number;
   try {
@@ -164,7 +276,7 @@ async function save() {
   display: flex;
   align-items: baseline;
   gap: var(--space-xs);
-  padding: var(--space-lg) var(--space-md);
+  padding: var(--space-lg) var(--space-md) var(--space-sm);
   cursor: pointer;
 }
 
@@ -181,6 +293,53 @@ async function save() {
 
 .amount.placeholder {
   color: var(--color-text-secondary);
+}
+
+.picker-section {
+  margin-top: var(--space-md);
+}
+
+.section-label {
+  margin: 0 var(--space-sm) var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.section-label.sub {
+  margin-top: var(--space-sm);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: 0 var(--space-sm);
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 16px;
+  padding: 8px 14px;
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.chip.selected {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+  font-weight: 500;
+}
+
+.selected-path {
+  margin: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-primary-dark);
 }
 
 .save-area {
