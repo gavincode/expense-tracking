@@ -18,5 +18,12 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.vue",
+    "functions/**/*.ts",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }
