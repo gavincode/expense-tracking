@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { uuid } from '../utils/uuid';
 
 export interface ExpenseRecord {
   id?: number;
@@ -68,7 +69,7 @@ export async function addExpense(input: NewExpense): Promise<number> {
     ...input,
     note: input.note ?? '',
     nickname: input.nickname ?? '我',
-    cloudId: crypto.randomUUID(),
+    cloudId: uuid(),
     createdAt: now,
     updatedAt: now,
     deleted: 0,

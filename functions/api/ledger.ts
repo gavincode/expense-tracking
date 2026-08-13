@@ -1,5 +1,6 @@
 import { getStore, type StoreOptions } from '@edgeone/pages-blob';
 import type { LedgerFile } from '../../src/types/ledger';
+import { uuid } from '../../src/utils/uuid';
 
 function ledgerKey(ledgerId: string): string {
   return `ledgers/${ledgerId}.json`;
@@ -34,7 +35,7 @@ export async function onRequestPost(context: {
     if (body.action !== 'create') {
       return json({ error: 'unsupported action' }, 400);
     }
-    const ledgerId = crypto.randomUUID();
+    const ledgerId = uuid();
     const inviteCode = randomInviteCode();
     const file: LedgerFile = {
       version: 1,

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { uuid } from '../utils/uuid';
 
 function safeGet(key: string): string {
   try {
@@ -23,7 +24,7 @@ export const useIdentityStore = defineStore('identity', () => {
 
   function ensureDeviceId(): string {
     if (!deviceId.value) {
-      deviceId.value = crypto.randomUUID();
+      deviceId.value = uuid();
       safeSet('rl_device_id', deviceId.value);
     }
     return deviceId.value;
