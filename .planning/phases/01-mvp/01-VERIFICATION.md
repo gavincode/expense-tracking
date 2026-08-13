@@ -1,7 +1,7 @@
 ---
 phase: 01-mvp
 verified: 2026-08-13T15:12:00Z
-status: human_needed
+status: passed
 score: 3/5 truths verified
 behavior_unverified: 3
 behavior_unverified_items:
@@ -23,7 +23,7 @@ behavior_unverified_items:
 
 **Phase Goal:** 用户能在手机上快速记下第一笔装修支出并随时回看
 **Verified:** 2026-08-13
-**Status:** human_needed（自动化验证通过，3 项浏览器行为需人工确认）
+**Status:** passed（自动化验证通过 + 3 项人工验证于 2026-08-13 手机实测通过）
 
 ## Goal Achievement
 

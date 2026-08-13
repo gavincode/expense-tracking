@@ -1,5 +1,5 @@
 ---
-status: testing
+status: passed
 phase: 01-mvp
 source: [01-VERIFICATION.md]
 started: 2026-08-13
@@ -18,22 +18,22 @@ awaiting: user response
 
 ### 1. 首页总览与记账入口
 expected: 首页显示本月合计、本月笔数、最近记录与"记一笔"按钮
-result: [pending]
+result: passed（用户手机验证通过，2026-08-13）
 
 ### 2. 完整记账路径
 expected: 首页 → 记一笔 → 输入金额 → 选分类（两级）→ 保存 → 回首页看到新记录
-result: [pending]
+result: passed（用户手机验证通过，2026-08-13）
 
 ### 3. 视觉与触控体验
 expected: 极简白 + 鼠尾草绿主色，字号/圆角/触控友好，全中文
-result: [pending]
+result: passed（用户手机验证通过，2026-08-13）
 
 ## Summary
 
 total: 3
-passed: 0
+passed: 3
 issues: 0
-pending: 3
+pending: 0
 skipped: 0
 blocked: 0
 
