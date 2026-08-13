@@ -5,3 +5,12 @@ dev-dist
 .DS_Store
 *.tsbuildinfo
 npm-debug.log*
+
+# Tencent Cloud EdgeOne
+.env
+.edgeone/*
+.tef_dist/*
+
+# 本地 SQLite 数据库文件（备份时复制整个 data 目录即可）
+data/
+  
