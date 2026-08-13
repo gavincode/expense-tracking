@@ -12,6 +12,9 @@
   --color-text-secondary: #8a8a8a;
   --color-border: #f0f0f0;
 
+  /* Vant 主色与设计令牌统一：所有主色按钮（保存/确定等）为鼠尾草绿 */
+  --van-primary-color: var(--color-primary);
+
   --radius-card: 14px;
   --radius-button: 16px;
   --space-xs: 4px;
