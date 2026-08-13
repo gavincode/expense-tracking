@@ -11,6 +11,7 @@
       </van-cell-group>
       <div class="detail-actions">
         <van-button round block plain type="primary" @click="goEdit">编辑</van-button>
+        <van-button round block plain type="danger" @click="confirmDelete">删除</van-button>
       </div>
     </div>
 
@@ -21,7 +22,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getById, type ExpenseRecord } from '../db/ledger';
+import { showConfirmDialog, showToast } from 'vant';
+import { getById, deleteExpense, type ExpenseRecord } from '../db/ledger';
 import { fromCents } from '../utils/money';
 
 const route = useRoute();
@@ -46,6 +48,25 @@ function goEdit() {
   }
 }
 
+async function confirmDelete() {
+  if (record.value?.id === undefined) {
+    return;
+  }
+  try {
+    await showConfirmDialog({
+      title: '删除这笔支出？',
+      message: '删除后不可恢复',
+      confirmButtonText: '删除',
+      confirmButtonColor: '#ee0a24',
+    });
+  } catch {
+    return; // 用户取消
+  }
+  await deleteExpense(record.value.id);
+  showToast('已删除');
+  router.replace('/list');
+}
+
 onMounted(load);
 </script>
 
@@ -68,5 +89,8 @@ onMounted(load);
 .detail-actions {
   margin-top: var(--space-lg);
   padding: 0 var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 </style>
