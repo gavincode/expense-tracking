@@ -1,0 +1,52 @@
+:root {
+  /* 极简白 + 鼠尾草绿（D-08） */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-primary: #8fae8b;
+  --color-primary-light: #eaf1ea;
+  --color-primary-dark: #6f9271;
+  --color-text: #2b2b2b;
+  --color-text-secondary: #8a8a8a;
+  --color-border: #f0f0f0;
+
+  --radius-card: 14px;
+  --radius-button: 16px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+
+  --touch-target: 44px;
+  --font-size-sm: 13px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 28px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+}
+
+button {
+  min-height: var(--touch-target);
+}
+
+.page {
+  padding: var(--space-md);
+  padding-bottom: calc(var(--space-lg) * 2);
+  max-width: 640px;
+  margin: 0 auto;
+}
