@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { db, addExpense, listRecent, getMonthSummary } from './ledger';
+import { db, addExpense, listRecent, listAll, getMonthSummary } from './ledger';
 import { toCents, fromCents } from '../utils/money';
 
 describe('ledger db', () => {
@@ -49,5 +49,13 @@ describe('ledger db', () => {
     const recent = await listRecent();
     expect(recent[0].date).toBe('2026-08-05');
     expect(recent[0].note).toBe('瓷砖铺贴尾款');
+  });
+
+  it('listAll 按日期倒序返回', async () => {
+    await addExpense({ amountCents: 100, categoryId: 'a', categoryPath: '硬装/水电', date: '2026-08-01' });
+    await addExpense({ amountCents: 200, categoryId: 'a', categoryPath: '硬装/水电', date: '2026-08-03' });
+    const all = await listAll();
+    expect(all[0].date).toBe('2026-08-03');
+    expect(all[1].date).toBe('2026-08-01');
   });
 });
