@@ -10,6 +10,7 @@ import {
   NavBar,
   NumberKeyboard,
   Popup,
+  SwipeCell,
 } from 'vant';
 import App from './App.vue';
 import router from './router';
@@ -19,7 +20,7 @@ import { registerSW } from 'virtual:pwa-register';
 
 const app = createApp(App);
 
-[Button, Cell, CellGroup, DatePicker, Empty, Field, NavBar, NumberKeyboard, Popup].forEach(
+[Button, Cell, CellGroup, DatePicker, Empty, Field, NavBar, NumberKeyboard, Popup, SwipeCell].forEach(
   (component) => app.use(component),
 );
 

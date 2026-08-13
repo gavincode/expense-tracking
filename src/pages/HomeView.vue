@@ -20,21 +20,21 @@
     <template v-if="records.length">
       <div class="section-title">最近记录</div>
       <div class="card">
-        <div
-          v-for="record in records"
-          :key="record.id"
-          class="record-row"
-          @click="goDetail(record.id)"
-        >
-          <div class="record-main">
-            <div class="record-category">{{ record.categoryPath }}</div>
-            <div class="record-note">{{ record.note || record.date }}</div>
+        <van-swipe-cell v-for="record in records" :key="record.id">
+          <div class="record-row" @click="goEdit(record.id)">
+            <div class="record-main">
+              <div class="record-category">{{ record.categoryPath }}</div>
+              <div class="record-note">{{ record.note || record.date }}</div>
+            </div>
+            <div class="record-right">
+              <span class="record-amount">¥{{ fromCents(record.amountCents) }}</span>
+              <span class="chevron">›</span>
+            </div>
           </div>
-          <div class="record-right">
-            <span class="record-amount">¥{{ fromCents(record.amountCents) }}</span>
-            <span class="chevron">›</span>
-          </div>
-        </div>
+          <template #right>
+            <button type="button" class="swipe-delete" @click="confirmDelete(record)">删除</button>
+          </template>
+        </van-swipe-cell>
       </div>
       <van-button plain round class="see-all" @click="goList">查看全部</van-button>
     </template>
@@ -50,11 +50,20 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { listRecent, getMonthSummary, type ExpenseRecord, type MonthSummary } from '../db/ledger';
+import { showConfirmDialog, showToast } from 'vant';
+import {
+  listRecent,
+  getMonthSummary,
+  deleteExpense,
+  type ExpenseRecord,
+  type MonthSummary,
+} from '../db/ledger';
 import { fromCents } from '../utils/money';
+import { useDraftStore } from '../stores/draft';
 import dayjs from 'dayjs';
 
 const router = useRouter();
+const draft = useDraftStore();
 const records = ref<ExpenseRecord[]>([]);
 const monthSummary = ref<MonthSummary>({ totalCents: 0, count: 0 });
 
@@ -64,6 +73,7 @@ async function loadRecent() {
 }
 
 function goRecord() {
+  draft.reset();
   router.push('/record');
 }
 
@@ -71,10 +81,29 @@ function goList() {
   router.push('/list');
 }
 
-function goDetail(id?: number) {
+function goEdit(id?: number) {
   if (id !== undefined) {
-    router.push(`/detail/${id}`);
+    router.push(`/edit/${id}`);
   }
+}
+
+async function confirmDelete(record: ExpenseRecord) {
+  if (record.id === undefined) {
+    return;
+  }
+  try {
+    await showConfirmDialog({
+      title: '删除这笔支出？',
+      message: '删除后不可恢复',
+      confirmButtonText: '删除',
+      confirmButtonColor: '#ee0a24',
+    });
+  } catch {
+    return;
+  }
+  await deleteExpense(record.id);
+  showToast('已删除');
+  await loadRecent();
 }
 
 onMounted(loadRecent);
@@ -187,6 +216,17 @@ onMounted(loadRecent);
 .chevron {
   font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
+}
+
+.swipe-delete {
+  appearance: none;
+  border: none;
+  height: 100%;
+  min-width: 72px;
+  background: #ee0a24;
+  color: #ffffff;
+  font-size: var(--font-size-md);
+  cursor: pointer;
 }
 
 .bottom-bar {

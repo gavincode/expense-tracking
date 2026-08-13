@@ -11,18 +11,18 @@
           <span class="day-total">¥{{ fromCents(group.totalCents) }}</span>
         </div>
         <div class="card">
-          <div
-            v-for="record in group.records"
-            :key="record.id"
-            class="record-row"
-            @click="goDetail(record.id)"
-          >
-            <div class="record-main">
-              <div class="record-category">{{ record.categoryPath }}</div>
-              <div class="record-note">{{ record.note || '无备注' }}</div>
+          <van-swipe-cell v-for="record in group.records" :key="record.id">
+            <div class="record-row" @click="goEdit(record.id)">
+              <div class="record-main">
+                <div class="record-category">{{ record.categoryPath }}</div>
+                <div class="record-note">{{ record.note || '无备注' }}</div>
+              </div>
+              <div class="record-amount">¥{{ fromCents(record.amountCents) }}</div>
             </div>
-            <div class="record-amount">¥{{ fromCents(record.amountCents) }}</div>
-          </div>
+            <template #right>
+              <button type="button" class="swipe-delete" @click="confirmDelete(record)">删除</button>
+            </template>
+          </van-swipe-cell>
         </div>
       </div>
     </template>
@@ -32,7 +32,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { listAll, type ExpenseRecord } from '../db/ledger';
+import { showConfirmDialog, showToast } from 'vant';
+import { listAll, deleteExpense, type ExpenseRecord } from '../db/ledger';
 import { fromCents } from '../utils/money';
 
 interface DayGroup {
@@ -70,10 +71,29 @@ function goBack() {
   router.back();
 }
 
-function goDetail(id?: number) {
+function goEdit(id?: number) {
   if (id !== undefined) {
-    router.push(`/detail/${id}`);
+    router.push(`/edit/${id}`);
   }
+}
+
+async function confirmDelete(record: ExpenseRecord) {
+  if (record.id === undefined) {
+    return;
+  }
+  try {
+    await showConfirmDialog({
+      title: '删除这笔支出？',
+      message: '删除后不可恢复',
+      confirmButtonText: '删除',
+      confirmButtonColor: '#ee0a24',
+    });
+  } catch {
+    return;
+  }
+  await deleteExpense(record.id);
+  showToast('已删除');
+  await load();
 }
 
 onMounted(load);
@@ -133,5 +153,16 @@ onMounted(load);
 .record-amount {
   font-size: var(--font-size-lg);
   font-weight: 600;
+}
+
+.swipe-delete {
+  appearance: none;
+  border: none;
+  height: 100%;
+  min-width: 72px;
+  background: #ee0a24;
+  color: #ffffff;
+  font-size: var(--font-size-md);
+  cursor: pointer;
 }
 </style>

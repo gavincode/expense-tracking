@@ -542,7 +542,7 @@ async function save() {
   draft.reset();
   if (editingId.value !== null) {
     showToast('已更新');
-    router.replace(`/detail/${editingId.value}`);
+    router.back();
   } else {
     showToast('已保存');
     router.push('/');
