@@ -21,6 +21,14 @@ export const UNCATEGORIZED = {
   colorDark: '#757575',
 } as const;
 
+/** 自定义一级分类的配色盘（低饱和、与预设和谐）。 */
+export const CUSTOM_GROUP_PALETTE = [
+  { color: '#8fb0a9', colorLight: '#e9f2f0', colorDark: '#668d85' },
+  { color: '#b58bb5', colorLight: '#f4ecf4', colorDark: '#916a91' },
+  { color: '#c9a95c', colorLight: '#f8f1de', colorDark: '#a3853f' },
+  { color: '#d98e7a', colorLight: '#fbece7', colorDark: '#b06a57' },
+] as const;
+
 /** 用户确认的 5 组一级 + 38 项二级预设（D-06；仅阶段维度 D-07）。 */
 export const PRESET_CATEGORIES: CategoryGroup[] = [
   {

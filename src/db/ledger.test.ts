@@ -1,11 +1,20 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { db, addExpense, listRecent, listAll, getMonthSummary } from './ledger';
+import {
+  db,
+  addExpense,
+  listRecent,
+  listAll,
+  getMonthSummary,
+  addCustomCategory,
+  listCustomCategories,
+} from './ledger';
 import { toCents, fromCents } from '../utils/money';
 
 describe('ledger db', () => {
   beforeEach(async () => {
     await db.expenses.clear();
+    await db.categories.clear();
   });
 
   it('addExpense 后 listRecent 能读回同一记录', async () => {
@@ -57,5 +66,30 @@ describe('ledger db', () => {
     const all = await listAll();
     expect(all[0].date).toBe('2026-08-03');
     expect(all[1].date).toBe('2026-08-01');
+  });
+
+  it('自定义一级/二级分类可保存并读回', async () => {
+    await addCustomCategory({
+      id: 'custom-group-1',
+      groupId: null,
+      name: '园林',
+      color: '#8fb0a9',
+      colorLight: '#e9f2f0',
+      colorDark: '#668d85',
+    });
+    await addCustomCategory({
+      id: 'custom-child-1',
+      groupId: 'custom-group-1',
+      name: '草坪',
+      color: '',
+      colorLight: '',
+      colorDark: '',
+    });
+    const all = await listCustomCategories();
+    expect(all).toHaveLength(2);
+    const group = all.find((c) => c.id === 'custom-group-1');
+    expect(group?.groupId).toBeNull();
+    const child = all.find((c) => c.id === 'custom-child-1');
+    expect(child?.groupId).toBe('custom-group-1');
   });
 });

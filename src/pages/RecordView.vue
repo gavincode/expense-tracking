@@ -13,7 +13,7 @@
       <div class="module-title">分类</div>
       <div class="chip-row">
         <button
-          v-for="group in groups"
+          v-for="group in allGroups"
           :key="group.id"
           type="button"
           class="chip cat-chip"
@@ -32,6 +32,7 @@
         >
           {{ UNCATEGORIZED.name }}
         </button>
+        <button type="button" class="chip add-chip" @click="openAddGroup">+ 添加一级</button>
       </div>
 
       <template v-if="activeGroup">
@@ -41,7 +42,7 @@
         </div>
         <div class="chip-row">
           <button
-            v-for="child in activeGroup.children"
+            v-for="child in activeChildren"
             :key="child.id"
             type="button"
             class="chip cat-chip"
@@ -51,6 +52,7 @@
           >
             {{ child.name }}
           </button>
+          <button type="button" class="chip add-chip" @click="openAddChild">+ 添加项目</button>
         </div>
       </template>
 
@@ -96,6 +98,17 @@
       </div>
     </div>
 
+    <van-popup v-model:show="addPopup" position="bottom" round>
+      <div class="add-panel">
+        <div class="add-title">{{ addMode === 'group' ? '添加一级分类' : '添加项目' }}</div>
+        <van-field v-model="newName" placeholder="输入名称（20 字以内）" maxlength="20" clearable />
+        <div class="add-actions">
+          <van-button plain round @click="addPopup = false">取消</van-button>
+          <van-button type="primary" round @click="confirmAdd">添加</van-button>
+        </div>
+      </div>
+    </van-popup>
+
     <div class="save-area">
       <van-button type="primary" round block size="large" :disabled="!canSave" @click="save">
         保存
@@ -136,11 +149,12 @@ import { useDraftStore } from '../stores/draft';
 import {
   PRESET_CATEGORIES,
   UNCATEGORIZED,
+  CUSTOM_GROUP_PALETTE,
   type CategoryGroup,
   type CategoryChild,
 } from '../data/categories';
 import { NOTE_TAGS } from '../data/note-tags';
-import { addExpense } from '../db/ledger';
+import { addExpense, addCustomCategory, listCustomCategories } from '../db/ledger';
 import { toCents } from '../utils/money';
 
 const router = useRouter();
@@ -149,9 +163,24 @@ const { selected } = storeToRefs(categoryStore);
 const draft = useDraftStore();
 
 const groups = PRESET_CATEGORIES;
+const customGroups = ref<CategoryGroup[]>([]);
+const customChildren = ref<Record<string, CategoryChild[]>>({});
 const noteTags = NOTE_TAGS;
 const activeGroup = ref<CategoryGroup | null>(null);
 const selectedChild = ref<CategoryChild | null>(null);
+const addPopup = ref(false);
+const addMode = ref<'group' | 'child'>('group');
+const newName = ref('');
+
+const allGroups = computed<CategoryGroup[]>(() => [...groups, ...customGroups.value]);
+
+const activeChildren = computed<CategoryChild[]>(() => {
+  if (!activeGroup.value) {
+    return [];
+  }
+  const customs = customChildren.value[activeGroup.value.id] ?? [];
+  return [...activeGroup.value.children, ...customs];
+});
 
 const showKeyboard = ref(false);
 const showDatePicker = ref(false);
@@ -176,6 +205,7 @@ function chipStyle(c: ChipColor): Record<string, string> {
 }
 
 onMounted(() => {
+  loadCustom();
   if (!selected.value) {
     categoryStore.setSelected({
       categoryId: UNCATEGORIZED.id,
@@ -184,6 +214,86 @@ onMounted(() => {
     });
   }
 });
+
+async function loadCustom() {
+  const items = await listCustomCategories();
+  customGroups.value = items
+    .filter((c) => c.groupId === null)
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      color: c.color,
+      colorLight: c.colorLight,
+      colorDark: c.colorDark,
+      children: [],
+    }));
+  const map: Record<string, CategoryChild[]> = {};
+  for (const c of items) {
+    if (c.groupId !== null) {
+      (map[c.groupId] ??= []).push({ id: c.id, name: c.name });
+    }
+  }
+  customChildren.value = map;
+}
+
+function openAddGroup() {
+  addMode.value = 'group';
+  newName.value = '';
+  addPopup.value = true;
+}
+
+function openAddChild() {
+  addMode.value = 'child';
+  newName.value = '';
+  addPopup.value = true;
+}
+
+async function confirmAdd() {
+  const name = newName.value.trim();
+  if (!name) {
+    showToast('请输入名称');
+    return;
+  }
+  if (addMode.value === 'group') {
+    if (allGroups.value.some((g) => g.name === name)) {
+      showToast('该分类已存在');
+      return;
+    }
+    const palette = CUSTOM_GROUP_PALETTE[customGroups.value.length % CUSTOM_GROUP_PALETTE.length];
+    const id = `custom-${Date.now()}`;
+    const group: CategoryGroup = { id, name, ...palette, children: [] };
+    await addCustomCategory({ id, groupId: null, name, ...palette });
+    customGroups.value.push(group);
+    activeGroup.value = group;
+    selectedChild.value = null;
+    categoryStore.setSelected({ categoryId: id, name, path: name });
+  } else {
+    if (!activeGroup.value) {
+      return;
+    }
+    if (activeChildren.value.some((c) => c.name === name)) {
+      showToast('该项目已存在');
+      return;
+    }
+    const id = `custom-${Date.now()}`;
+    const child: CategoryChild = { id, name };
+    await addCustomCategory({
+      id,
+      groupId: activeGroup.value.id,
+      name,
+      color: '',
+      colorLight: '',
+      colorDark: '',
+    });
+    customChildren.value = {
+      ...customChildren.value,
+      [activeGroup.value.id]: [...(customChildren.value[activeGroup.value.id] ?? []), child],
+    };
+    selectChild(child);
+  }
+  newName.value = '';
+  addPopup.value = false;
+}
 
 function goBack() {
   if (window.history.length > 1) {
@@ -426,6 +536,13 @@ async function save() {
   font-weight: 600;
 }
 
+.chip.add-chip {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-secondary);
+}
+
 .selected-path {
   margin-top: var(--space-sm);
   font-size: var(--font-size-sm);
@@ -455,5 +572,26 @@ async function save() {
 
 .save-area {
   margin-top: var(--space-lg);
+}
+
+.add-panel {
+  padding: var(--space-lg) var(--space-md) calc(var(--space-lg) + env(safe-area-inset-bottom));
+}
+
+.add-title {
+  margin-bottom: var(--space-md);
+  text-align: center;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.add-actions {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.add-actions .van-button {
+  flex: 1;
 }
 </style>

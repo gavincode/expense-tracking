@@ -11,13 +11,28 @@ export interface ExpenseRecord {
   updatedAt: number;
 }
 
+export interface CustomCategory {
+  id: string;
+  groupId: string | null; // null = 一级分类
+  name: string;
+  color: string;
+  colorLight: string;
+  colorDark: string;
+  createdAt: number;
+}
+
 class LedgerDB extends Dexie {
   expenses!: Table<ExpenseRecord, number>;
+  categories!: Table<CustomCategory, string>;
 
   constructor() {
     super('renovation-ledger');
     this.version(1).stores({
       expenses: '++id, date, categoryId, createdAt, updatedAt',
+    });
+    this.version(2).stores({
+      expenses: '++id, date, categoryId, createdAt, updatedAt',
+      categories: 'id, groupId, createdAt',
     });
   }
 }
@@ -67,4 +82,15 @@ export async function getMonthSummary(yearMonth: string): Promise<MonthSummary> 
     totalCents: rows.reduce((sum, r) => sum + r.amountCents, 0),
     count: rows.length,
   };
+}
+
+export async function addCustomCategory(
+  input: Omit<CustomCategory, 'createdAt'>,
+): Promise<string> {
+  await db.categories.add({ ...input, createdAt: Date.now() });
+  return input.id;
+}
+
+export async function listCustomCategories(): Promise<CustomCategory[]> {
+  return db.categories.toArray();
 }
