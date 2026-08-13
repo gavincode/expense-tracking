@@ -137,7 +137,7 @@ import { useDraftStore } from '../stores/draft';
 import { useIdentityStore } from '../stores/identity';
 import { createLedger as apiCreateLedger } from '../api/client';
 import QRCode from 'qrcode';
-import { buildLocalFile, pushLedger, pullLedger } from '../db/sync';
+import { useSync } from '../composables/useSync';
 import type { LedgerMember } from '../types/ledger';
 import dayjs from 'dayjs';
 
@@ -168,7 +168,6 @@ const customCategories = ref<CustomCategory[]>([]);
 const ledgerId = ref(safeGet('rl_ledger_id'));
 const inviteCode = ref(safeGet('rl_invite_code'));
 const creating = ref(false);
-const syncing = ref(false);
 const nicknamePopup = ref(false);
 const invitePopup = ref(false);
 const inviteQr = ref('');
@@ -176,6 +175,14 @@ const newNickname = ref(identity.nickname);
 
 const inviteLink = computed(() =>
   inviteCode.value ? `${location.origin}/join?code=${inviteCode.value}` : '',
+);
+
+const { syncing, syncOnce } = useSync(
+  () => ledgerId.value,
+  () => inviteCode.value,
+  () => {
+    loadRecent();
+  },
 );
 
 const members = computed<LedgerMember[]>(() => {
@@ -218,28 +225,7 @@ async function createLedger() {
 }
 
 async function syncAll() {
-  if (!ledgerId.value || syncing.value) {
-    return;
-  }
-  syncing.value = true;
-  try {
-    const local = await buildLocalFile(
-      ledgerId.value,
-      inviteCode.value,
-      members.value.map((m) => ({ ...m })),
-    );
-    await pushLedger(local);
-    const remote = await pullLedger(ledgerId.value);
-    if (remote.inviteCode) {
-      safeSet('rl_invite_code', remote.inviteCode);
-    }
-    safeSet('rl_members', JSON.stringify(remote.members));
-    await loadRecent();
-  } catch (error) {
-    showToast('同步失败：' + String(error));
-  } finally {
-    syncing.value = false;
-  }
+  await syncOnce();
 }
 
 function openNicknamePopup() {

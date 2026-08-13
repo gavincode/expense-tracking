@@ -571,7 +571,7 @@ async function save() {
     showToast('已更新');
     router.back();
   } else {
-    showToast('已保存');
+    showToast(navigator.onLine ? '已保存' : '已保存（待同步）');
     router.push('/');
   }
 }
