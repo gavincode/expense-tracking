@@ -1,6 +1,6 @@
 <template>
   <div class="page record-page">
-    <van-nav-bar title="记一笔" left-arrow @click-left="goBack" />
+    <van-nav-bar :title="isEdit ? '编辑支出' : '记一笔'" left-arrow @click-left="goBack" />
 
     <div class="amount-box" @click="showKeyboard = true">
       <span class="currency">¥</span>
@@ -111,7 +111,7 @@
 
     <div class="save-area">
       <van-button type="primary" round block size="large" :disabled="!canSave" @click="save">
-        保存
+        {{ isEdit ? '保存修改' : '保存' }}
       </van-button>
     </div>
 
@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { showToast } from 'vant';
 import { storeToRefs } from 'pinia';
 import { useCategoryStore } from '../stores/category';
@@ -154,10 +154,19 @@ import {
   type CategoryChild,
 } from '../data/categories';
 import { NOTE_TAGS } from '../data/note-tags';
-import { addExpense, addCustomCategory, listCustomCategories } from '../db/ledger';
+import {
+  addExpense,
+  addCustomCategory,
+  listCustomCategories,
+  getById,
+  updateExpense,
+  type ExpenseRecord,
+} from '../db/ledger';
 import { toCents } from '../utils/money';
+import { fromCents } from '../utils/money';
 
 const router = useRouter();
+const route = useRoute();
 const categoryStore = useCategoryStore();
 const { selected } = storeToRefs(categoryStore);
 const draft = useDraftStore();
@@ -171,6 +180,15 @@ const selectedChild = ref<CategoryChild | null>(null);
 const addPopup = ref(false);
 const addMode = ref<'group' | 'child'>('group');
 const newName = ref('');
+
+const editingId = computed<number | null>(() => {
+  if (route.name !== 'edit') {
+    return null;
+  }
+  const id = Number(route.params.id);
+  return Number.isFinite(id) ? id : null;
+});
+const isEdit = computed(() => editingId.value !== null);
 
 const allGroups = computed<CategoryGroup[]>(() => [...groups, ...customGroups.value]);
 
@@ -204,9 +222,18 @@ function chipStyle(c: ChipColor): Record<string, string> {
   };
 }
 
-onMounted(() => {
-  loadCustom();
-  if (!selected.value) {
+onMounted(async () => {
+  await loadCustom();
+  draft.reset();
+  if (editingId.value !== null) {
+    const record = await getById(editingId.value);
+    if (!record) {
+      showToast('记录不存在或已删除');
+      router.replace('/list');
+      return;
+    }
+    prefillRecord(record);
+  } else if (!selected.value) {
     categoryStore.setSelected({
       categoryId: UNCATEGORIZED.id,
       name: UNCATEGORIZED.name,
@@ -214,6 +241,39 @@ onMounted(() => {
     });
   }
 });
+
+function prefillRecord(record: ExpenseRecord) {
+  draft.amount = fromCents(record.amountCents);
+  draft.date = record.date;
+  draft.note = record.note;
+  const matched = allGroups.value
+    .map((group) => {
+      const preset = group.children.find((c) => c.id === record.categoryId);
+      const custom = (customChildren.value[group.id] ?? []).find((c) => c.id === record.categoryId);
+      return { group, child: preset ?? custom ?? null };
+    })
+    .find((entry) => entry.child !== null);
+  if (matched) {
+    activeGroup.value = matched.group;
+    selectedChild.value = matched.child;
+    categoryStore.setSelected({
+      categoryId: matched.child!.id,
+      name: matched.child!.name,
+      path: `${matched.group.name}/${matched.child!.name}`,
+    });
+    return;
+  }
+  if (record.categoryId === UNCATEGORIZED.id) {
+    selectUncategorized();
+    return;
+  }
+  // 分类已被删除：保留原路径文本快照
+  categoryStore.setSelected({
+    categoryId: record.categoryId,
+    name: record.categoryPath,
+    path: record.categoryPath,
+  });
+}
 
 async function loadCustom() {
   const items = await listCustomCategories();
@@ -404,16 +464,31 @@ async function save() {
     showToast('请选择分类');
     return;
   }
-  await addExpense({
-    amountCents,
-    categoryId: selected.value.categoryId,
-    categoryPath: selected.value.path,
-    date: draft.date,
-    note: draft.note,
-  });
+  if (editingId.value !== null) {
+    await updateExpense(editingId.value, {
+      amountCents,
+      categoryId: selected.value.categoryId,
+      categoryPath: selected.value.path,
+      date: draft.date,
+      note: draft.note,
+    });
+  } else {
+    await addExpense({
+      amountCents,
+      categoryId: selected.value.categoryId,
+      categoryPath: selected.value.path,
+      date: draft.date,
+      note: draft.note,
+    });
+  }
   draft.reset();
-  showToast('已保存');
-  router.push('/');
+  if (editingId.value !== null) {
+    showToast('已更新');
+    router.replace(`/detail/${editingId.value}`);
+  } else {
+    showToast('已保存');
+    router.push('/');
+  }
 }
 </script>
 

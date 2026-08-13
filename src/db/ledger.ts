@@ -57,6 +57,13 @@ export async function addExpense(input: NewExpense): Promise<number> {
   });
 }
 
+export async function updateExpense(
+  id: number,
+  fields: Partial<Pick<ExpenseRecord, 'amountCents' | 'categoryId' | 'categoryPath' | 'date' | 'note'>>,
+): Promise<void> {
+  await db.expenses.update(id, { ...fields, updatedAt: Date.now() });
+}
+
 export async function listRecent(limit = 5): Promise<ExpenseRecord[]> {
   const rows = await db.expenses.orderBy('date').reverse().limit(limit).toArray();
   return rows.sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);

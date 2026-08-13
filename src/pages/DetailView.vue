@@ -9,6 +9,9 @@
         <van-cell title="日期" :value="record.date" />
         <van-cell title="备注" :value="record.note || '无备注'" />
       </van-cell-group>
+      <div class="detail-actions">
+        <van-button round block plain type="primary" @click="goEdit">编辑</van-button>
+      </div>
     </div>
 
     <van-empty v-else description="记录不存在或已删除" />
@@ -37,6 +40,12 @@ function goBack() {
   router.back();
 }
 
+function goEdit() {
+  if (record.value?.id !== undefined) {
+    router.push(`/edit/${record.value.id}`);
+  }
+}
+
 onMounted(load);
 </script>
 
@@ -54,5 +63,10 @@ onMounted(load);
   text-align: center;
   font-size: 44px;
   font-weight: 600;
+}
+
+.detail-actions {
+  margin-top: var(--space-lg);
+  padding: 0 var(--space-md);
 }
 </style>
