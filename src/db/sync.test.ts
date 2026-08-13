@@ -79,6 +79,14 @@ describe('sync merge', () => {
     expect(merged.records[0].updatedAt).toBe(200);
   });
 
+  it('多设备一致性：编辑后的记录按 updatedAt 胜出', () => {
+    const deviceA = ledger({ records: [record('a', 100, 0)] });
+    const deviceB = ledger({ records: [{ ...record('a', 300, 0), amountCents: 999 }] });
+    const merged = mergeLedgerFiles(deviceA, deviceB);
+    expect(merged.records[0].amountCents).toBe(999);
+    expect(merged.records[0].updatedAt).toBe(300);
+  });
+
   it('mergeMembers / mergeCategories 幂等合并', () => {
     const members = mergeMembers(
       [{ deviceId: 'd1', nickname: '妈妈', joinedAt: 5 }],
