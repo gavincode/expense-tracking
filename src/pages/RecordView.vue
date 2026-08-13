@@ -1,6 +1,12 @@
 <template>
   <div class="page record-page">
-    <van-nav-bar :title="isEdit ? '编辑支出' : '记一笔'" left-arrow @click-left="goBack" />
+    <van-nav-bar
+      :title="isEdit ? '编辑支出' : '记一笔'"
+      left-arrow
+      @click-left="goBack"
+      :right-text="canQuickSave ? '保存' : ''"
+      @click-right="onQuickSave"
+    />
 
     <div class="amount-box" @click="showKeyboard = true">
       <span class="currency">¥</span>
@@ -228,6 +234,8 @@ const editingId = computed<number | null>(() => {
 });
 const isEdit = computed(() => editingId.value !== null);
 
+const canQuickSave = computed(() => draft.amount.trim() !== '');
+
 const bothLevelsSelected = computed(
   () => activeGroup.value !== null && selectedChild.value !== null,
 );
@@ -416,6 +424,12 @@ function goBack() {
     router.back();
   } else {
     router.push('/');
+  }
+}
+
+function onQuickSave() {
+  if (canQuickSave.value) {
+    save();
   }
 }
 
