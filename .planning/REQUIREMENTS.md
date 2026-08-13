@@ -15,9 +15,9 @@
 
 ### 共享账本 (SHAR)
 
-- [ ] **SHAR-01**: 用户能通过邀请链接/二维码加入同一个装修账本
-- [ ] **SHAR-02**: 每笔支出显示记录人（设备昵称标识，v1 无需登录）
-- [ ] **SHAR-03**: 多个家人的设备能同步同一个账本的数据
+- [x] **SHAR-01**: 用户能通过邀请链接/二维码加入同一个装修账本
+- [x] **SHAR-02**: 每笔支出显示记录人（设备昵称标识，v1 无需登录）
+- [x] **SHAR-03**: 多个家人的设备能同步同一个账本的数据
 
 ### 统计 (STAT)
 
@@ -65,9 +65,9 @@
 | UX-01 | Phase 1 | Complete |
 | REC-03 | Phase 2 | Complete |
 | REC-05 | Phase 2 | Complete |
-| SHAR-01 | Phase 3 | Pending |
-| SHAR-02 | Phase 3 | Pending |
-| SHAR-03 | Phase 3 | Pending |
+| SHAR-01 | Phase 3 | Complete |
+| SHAR-02 | Phase 3 | Complete |
+| SHAR-03 | Phase 3 | Complete |
 | STAT-01 | Phase 4 | Pending |
 
 **Coverage:**
