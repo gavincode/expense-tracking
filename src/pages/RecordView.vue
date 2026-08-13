@@ -190,6 +190,7 @@ import { showToast } from 'vant';
 import { storeToRefs } from 'pinia';
 import { useCategoryStore } from '../stores/category';
 import { useDraftStore } from '../stores/draft';
+import { useIdentityStore } from '../stores/identity';
 import {
   PRESET_CATEGORIES,
   UNCATEGORIZED,
@@ -214,6 +215,7 @@ const route = useRoute();
 const categoryStore = useCategoryStore();
 const { selected } = storeToRefs(categoryStore);
 const draft = useDraftStore();
+const identity = useIdentityStore();
 
 const groups = PRESET_CATEGORIES;
 const customGroups = ref<CategoryGroup[]>([]);
@@ -561,6 +563,7 @@ async function save() {
       categoryPath: selected.value.path,
       date: draft.date,
       note: draft.note,
+      nickname: identity.nickname,
     });
   }
   draft.reset();

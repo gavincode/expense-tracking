@@ -13,7 +13,11 @@ import {
   deleteExpense,
   renameCategory,
   deleteCategory,
+  getByCloudId,
+  upsertCloudRecords,
+  listPendingSync,
 } from './ledger';
+import type { CloudRecord } from '../types/ledger';
 import { toCents, fromCents } from '../utils/money';
 
 describe('ledger db', () => {
@@ -160,5 +164,62 @@ describe('ledger db', () => {
     expect(items.find((c) => c.id === 'custom-x')).toBeUndefined();
     const raw = await db.categories.get('custom-x');
     expect(raw?.deleted).toBe(1);
+  });
+
+  it('addExpense 写入 cloudId 与默认昵称', async () => {
+    const id = await addExpense({
+      amountCents: 100,
+      categoryId: 'a',
+      categoryPath: '硬装/水电',
+      date: '2026-08-01',
+    });
+    const record = await getById(id);
+    expect(record?.cloudId).toBeTruthy();
+    expect(record?.nickname).toBe('我');
+  });
+
+  it('upsertCloudRecords 新增/更新/删除按 cloudId 合并', async () => {
+    const cloud: CloudRecord = {
+      cloudId: 'cloud-1',
+      amountCents: 5000,
+      categoryId: 'hardin-paint',
+      categoryPath: '硬装/油漆',
+      date: '2026-08-10',
+      note: '乳胶漆',
+      nickname: '妈妈',
+      createdAt: 1,
+      updatedAt: 100,
+      deleted: 0,
+    };
+    await upsertCloudRecords([cloud]);
+    let local = await getByCloudId('cloud-1');
+    expect(local?.amountCents).toBe(5000);
+    expect(local?.nickname).toBe('妈妈');
+
+    await upsertCloudRecords([
+      { ...cloud, amountCents: 6000, updatedAt: 200, note: '面漆' },
+    ]);
+    local = await getByCloudId('cloud-1');
+    expect(local?.amountCents).toBe(6000);
+    expect(local?.note).toBe('面漆');
+
+    await upsertCloudRecords([{ ...cloud, deleted: 1, updatedAt: 300 }]);
+    local = await getByCloudId('cloud-1');
+    expect(local?.deleted).toBe(1);
+    expect(await getById(local?.id ?? -1)).toBeUndefined();
+  });
+
+  it('listPendingSync 返回 updatedAt 之后（含 tombstone）', async () => {
+    const id = await addExpense({
+      amountCents: 100,
+      categoryId: 'a',
+      categoryPath: '硬装/水电',
+      date: '2026-08-01',
+    });
+    const now = Date.now();
+    await deleteExpense(id);
+    const pending = await listPendingSync(now - 1000);
+    expect(pending.length).toBeGreaterThanOrEqual(1);
+    expect(pending[0].deleted).toBe(1);
   });
 });

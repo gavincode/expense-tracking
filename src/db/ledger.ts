@@ -2,15 +2,19 @@ import Dexie, { type Table } from 'dexie';
 
 export interface ExpenseRecord {
   id?: number;
+  cloudId?: string;
   amountCents: number;
   categoryId: string;
   categoryPath: string;
   date: string; // YYYY-MM-DD
   note: string;
+  nickname?: string;
   createdAt: number;
   updatedAt: number;
   deleted?: number; // 0 = 正常, 1 = 已删除（软删除 tombstone）
 }
+
+import type { CloudRecord } from '../types/ledger';
 
 export interface CustomCategory {
   id: string;
@@ -40,6 +44,10 @@ class LedgerDB extends Dexie {
       expenses: '++id, date, categoryId, createdAt, updatedAt, deleted',
       categories: 'id, groupId, createdAt, deleted',
     });
+    this.version(4).stores({
+      expenses: '++id, date, categoryId, createdAt, updatedAt, deleted, cloudId',
+      categories: 'id, groupId, createdAt, deleted',
+    });
   }
 }
 
@@ -51,6 +59,7 @@ export interface NewExpense {
   categoryPath: string;
   date: string;
   note?: string;
+  nickname?: string;
 }
 
 export async function addExpense(input: NewExpense): Promise<number> {
@@ -58,6 +67,8 @@ export async function addExpense(input: NewExpense): Promise<number> {
   return db.expenses.add({
     ...input,
     note: input.note ?? '',
+    nickname: input.nickname ?? '我',
+    cloudId: crypto.randomUUID(),
     createdAt: now,
     updatedAt: now,
     deleted: 0,
@@ -105,6 +116,49 @@ export async function getMonthSummary(yearMonth: string): Promise<MonthSummary> 
 
 export async function deleteExpense(id: number): Promise<void> {
   await db.expenses.update(id, { deleted: 1, updatedAt: Date.now() });
+}
+
+export async function getByCloudId(cloudId: string): Promise<ExpenseRecord | undefined> {
+  return db.expenses.where('cloudId').equals(cloudId).first();
+}
+
+/** 从云端合并记录：新增/更新按 cloudId，云端 tombstone 同步为本地删除。 */
+export async function upsertCloudRecords(records: CloudRecord[]): Promise<void> {
+  await db.transaction('rw', db.expenses, async () => {
+    for (const record of records) {
+      const existing = await db.expenses.where('cloudId').equals(record.cloudId).first();
+      if (record.deleted) {
+        if (existing && !existing.deleted) {
+          await db.expenses.update(existing.id!, { deleted: 1, updatedAt: record.updatedAt });
+        }
+        continue;
+      }
+      const base = {
+        cloudId: record.cloudId,
+        amountCents: record.amountCents,
+        categoryId: record.categoryId,
+        categoryPath: record.categoryPath,
+        date: record.date,
+        note: record.note,
+        nickname: record.nickname,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        deleted: 0,
+      };
+      if (existing) {
+        if (record.updatedAt >= (existing.updatedAt ?? 0)) {
+          await db.expenses.update(existing.id!, base);
+        }
+      } else {
+        await db.expenses.add(base);
+      }
+    }
+  });
+}
+
+/** 待同步记录：updatedAt 晚于给定时间（含软删除 tombstone）。 */
+export async function listPendingSync(since: number): Promise<ExpenseRecord[]> {
+  return db.expenses.where('updatedAt').above(since).toArray();
 }
 
 export async function addCustomCategory(

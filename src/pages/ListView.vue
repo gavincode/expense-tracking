@@ -22,7 +22,9 @@
                   />
                   {{ record.categoryPath }}
                 </div>
-                <div class="record-note">{{ record.note || '无备注' }}</div>
+                <div class="record-note">
+                  {{ record.nickname || '我' }} · {{ record.note || record.date }}
+                </div>
               </div>
               <div class="record-amount">¥{{ fromCents(record.amountCents) }}</div>
             </div>

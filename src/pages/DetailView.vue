@@ -7,6 +7,7 @@
       <van-cell-group inset>
         <van-cell title="分类" :value="record.categoryPath" />
         <van-cell title="日期" :value="record.date" />
+        <van-cell title="记录人" :value="record.nickname || '我'" />
         <van-cell title="备注" :value="record.note || '无备注'" />
       </van-cell-group>
       <div class="detail-actions">
