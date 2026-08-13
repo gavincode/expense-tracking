@@ -14,7 +14,14 @@
           <van-swipe-cell v-for="record in group.records" :key="record.id">
             <div class="record-row" @click="goEdit(record.id)">
               <div class="record-main">
-                <div class="record-category">{{ record.categoryPath }}</div>
+                <div class="record-category" :style="categoryStyle(record)">
+                  <span
+                    v-if="categoryColor(record)"
+                    class="cat-dot"
+                    :style="{ background: categoryColor(record)!.color }"
+                  />
+                  {{ record.categoryPath }}
+                </div>
                 <div class="record-note">{{ record.note || '无备注' }}</div>
               </div>
               <div class="record-amount">¥{{ fromCents(record.amountCents) }}</div>
@@ -33,7 +40,14 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { showConfirmDialog, showToast } from 'vant';
-import { listAll, deleteExpense, type ExpenseRecord } from '../db/ledger';
+import {
+  listAll,
+  deleteExpense,
+  listCustomCategories,
+  type ExpenseRecord,
+  type CustomCategory,
+} from '../db/ledger';
+import { resolveCategoryColor, type CategoryColorInfo } from '../data/categories';
 import { fromCents } from '../utils/money';
 
 interface DayGroup {
@@ -44,6 +58,7 @@ interface DayGroup {
 
 const router = useRouter();
 const records = ref<ExpenseRecord[]>([]);
+const customCategories = ref<CustomCategory[]>([]);
 
 const groups = computed<DayGroup[]>(() => {
   const map = new Map<string, DayGroup>();
@@ -65,6 +80,16 @@ const groups = computed<DayGroup[]>(() => {
 
 async function load() {
   records.value = await listAll();
+  customCategories.value = await listCustomCategories();
+}
+
+function categoryColor(record: ExpenseRecord): CategoryColorInfo | null {
+  return resolveCategoryColor(record.categoryId, customCategories.value);
+}
+
+function categoryStyle(record: ExpenseRecord): Record<string, string> {
+  const info = categoryColor(record);
+  return info ? { color: info.colorDark } : {};
 }
 
 function goBack() {
@@ -142,6 +167,15 @@ onMounted(load);
 .record-category {
   font-size: var(--font-size-md);
   font-weight: 500;
+}
+
+.cat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 .record-note {

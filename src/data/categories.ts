@@ -29,6 +29,41 @@ export const CUSTOM_GROUP_PALETTE = [
   { color: '#d98e7a', colorLight: '#fbece7', colorDark: '#b06a57' },
 ] as const;
 
+export interface CategoryColorInfo {
+  color: string;
+  colorDark: string;
+}
+
+/**
+ * 解析分类所属组的配色（与记一笔页面标签一致）。
+ * 支持预设一级/二级、自定义一级/二级；未分类或已删除分类返回 null。
+ */
+export function resolveCategoryColor(
+  categoryId: string,
+  custom: { id: string; groupId: string | null; color: string; colorDark: string }[] = [],
+): CategoryColorInfo | null {
+  const presetGroup = PRESET_CATEGORIES.find((g) => g.children.some((c) => c.id === categoryId));
+  if (presetGroup) {
+    return { color: presetGroup.color, colorDark: presetGroup.colorDark };
+  }
+  const customGroup = custom.find((c) => c.id === categoryId && c.groupId === null);
+  if (customGroup) {
+    return { color: customGroup.color, colorDark: customGroup.colorDark };
+  }
+  const customChild = custom.find((c) => c.id === categoryId && c.groupId !== null);
+  if (customChild?.groupId) {
+    const parentCustom = custom.find((c) => c.id === customChild.groupId && c.groupId === null);
+    if (parentCustom) {
+      return { color: parentCustom.color, colorDark: parentCustom.colorDark };
+    }
+    const presetParent = PRESET_CATEGORIES.find((g) => g.id === customChild.groupId);
+    if (presetParent) {
+      return { color: presetParent.color, colorDark: presetParent.colorDark };
+    }
+  }
+  return null;
+}
+
 /** 用户确认的 5 组一级 + 38 项二级预设（D-06；仅阶段维度 D-07）。 */
 export const PRESET_CATEGORIES: CategoryGroup[] = [
   {

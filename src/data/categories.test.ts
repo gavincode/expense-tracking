@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PRESET_CATEGORIES } from './categories';
+import { PRESET_CATEGORIES, resolveCategoryColor } from './categories';
 
 describe('preset categories', () => {
   it('包含 5 组一级分类', () => {
@@ -36,5 +36,33 @@ describe('preset categories', () => {
       expect(group.colorLight).toMatch(/^#[0-9a-fA-F]{6}$/);
       expect(group.colorDark).toMatch(/^#[0-9a-fA-F]{6}$/);
     }
+  });
+
+  it('resolveCategoryColor 返回与标签一致的组色', () => {
+    const tile = resolveCategoryColor('hardin-tile');
+    expect(tile).toEqual({ color: '#8fae8b', colorDark: '#6f9271' });
+    expect(resolveCategoryColor('uncategorized')).toBeNull();
+    const custom = [
+      {
+        id: 'custom-g1',
+        groupId: null,
+        color: '#8fb0a9',
+        colorDark: '#668d85',
+      },
+      {
+        id: 'custom-c1',
+        groupId: 'custom-g1',
+        color: '',
+        colorDark: '',
+      },
+    ];
+    expect(resolveCategoryColor('custom-g1', custom)).toEqual({
+      color: '#8fb0a9',
+      colorDark: '#668d85',
+    });
+    expect(resolveCategoryColor('custom-c1', custom)).toEqual({
+      color: '#8fb0a9',
+      colorDark: '#668d85',
+    });
   });
 });

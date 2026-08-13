@@ -23,7 +23,10 @@
         <van-swipe-cell v-for="record in records" :key="record.id">
           <div class="record-row" @click="goEdit(record.id)">
             <div class="record-main">
-              <div class="record-category">{{ record.categoryPath }}</div>
+              <div class="record-category" :style="categoryStyle(record)">
+                <span v-if="categoryColor(record)" class="cat-dot" :style="{ background: categoryColor(record)!.color }" />
+                {{ record.categoryPath }}
+              </div>
               <div class="record-note">{{ record.note || record.date }}</div>
             </div>
             <div class="record-right">
@@ -54,10 +57,13 @@ import { showConfirmDialog, showToast } from 'vant';
 import {
   listRecent,
   getMonthSummary,
+  listCustomCategories,
   deleteExpense,
   type ExpenseRecord,
   type MonthSummary,
+  type CustomCategory,
 } from '../db/ledger';
+import { resolveCategoryColor, type CategoryColorInfo } from '../data/categories';
 import { fromCents } from '../utils/money';
 import { useDraftStore } from '../stores/draft';
 import dayjs from 'dayjs';
@@ -66,10 +72,21 @@ const router = useRouter();
 const draft = useDraftStore();
 const records = ref<ExpenseRecord[]>([]);
 const monthSummary = ref<MonthSummary>({ totalCents: 0, count: 0 });
+const customCategories = ref<CustomCategory[]>([]);
 
 async function loadRecent() {
   records.value = await listRecent(5);
   monthSummary.value = await getMonthSummary(dayjs().format('YYYY-MM'));
+  customCategories.value = await listCustomCategories();
+}
+
+function categoryColor(record: ExpenseRecord): CategoryColorInfo | null {
+  return resolveCategoryColor(record.categoryId, customCategories.value);
+}
+
+function categoryStyle(record: ExpenseRecord): Record<string, string> {
+  const info = categoryColor(record);
+  return info ? { color: info.colorDark } : {};
 }
 
 function goRecord() {
@@ -193,6 +210,15 @@ onMounted(loadRecent);
 .record-category {
   font-size: var(--font-size-md);
   font-weight: 500;
+}
+
+.cat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 .record-note {

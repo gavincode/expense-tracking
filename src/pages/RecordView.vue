@@ -4,9 +4,11 @@
       :title="isEdit ? '编辑支出' : '记一笔'"
       left-arrow
       @click-left="goBack"
-      :right-text="canQuickSave ? '保存' : ''"
-      @click-right="onQuickSave"
-    />
+    >
+      <template #right>
+        <span v-if="canQuickSave" class="quick-save" @click="onQuickSave">保存</span>
+      </template>
+    </van-nav-bar>
 
     <div class="amount-box" @click="showKeyboard = true">
       <span class="currency">¥</span>
@@ -770,5 +772,18 @@ async function save() {
 
 .add-actions .van-button {
   flex: 1;
+}
+
+.quick-save {
+  display: inline-block;
+  margin-right: var(--space-sm);
+  padding: 6px 18px;
+  border-radius: 16px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  min-height: 28px;
+  cursor: pointer;
 }
 </style>
