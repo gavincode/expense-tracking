@@ -20,12 +20,20 @@
     <template v-if="records.length">
       <div class="section-title">最近记录</div>
       <div class="card">
-        <div v-for="record in records" :key="record.id" class="record-row">
+        <div
+          v-for="record in records"
+          :key="record.id"
+          class="record-row"
+          @click="goDetail(record.id)"
+        >
           <div class="record-main">
             <div class="record-category">{{ record.categoryPath }}</div>
             <div class="record-note">{{ record.note || record.date }}</div>
           </div>
-          <div class="record-amount">¥{{ fromCents(record.amountCents) }}</div>
+          <div class="record-right">
+            <span class="record-amount">¥{{ fromCents(record.amountCents) }}</span>
+            <span class="chevron">›</span>
+          </div>
         </div>
       </div>
       <van-button plain round class="see-all" @click="goList">查看全部</van-button>
@@ -61,6 +69,12 @@ function goRecord() {
 
 function goList() {
   router.push('/list');
+}
+
+function goDetail(id?: number) {
+  if (id !== undefined) {
+    router.push(`/detail/${id}`);
+  }
 }
 
 onMounted(loadRecent);
@@ -136,6 +150,11 @@ onMounted(loadRecent);
   padding: var(--space-md);
   min-height: var(--touch-target);
   border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.record-row:active {
+  background: var(--color-border);
 }
 
 .record-row:last-child {
@@ -157,6 +176,17 @@ onMounted(loadRecent);
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text);
+}
+
+.record-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.chevron {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
 }
 
 .bottom-bar {
