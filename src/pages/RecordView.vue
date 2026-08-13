@@ -13,14 +13,6 @@
       <div class="section-label">分类</div>
       <div class="chip-row">
         <button
-          type="button"
-          class="chip"
-          :class="{ selected: !activeGroup && selected?.categoryId === UNCATEGORIZED.id }"
-          @click="selectUncategorized"
-        >
-          {{ UNCATEGORIZED.name }}
-        </button>
-        <button
           v-for="group in groups"
           :key="group.id"
           type="button"
@@ -29,6 +21,14 @@
           @click="selectGroup(group)"
         >
           {{ group.name }}
+        </button>
+        <button
+          type="button"
+          class="chip"
+          :class="{ selected: !activeGroup && selected?.categoryId === UNCATEGORIZED.id }"
+          @click="selectUncategorized"
+        >
+          {{ UNCATEGORIZED.name }}
         </button>
       </div>
 
@@ -50,8 +50,6 @@
 
       <div v-if="selected" class="selected-path">已选：{{ selected.path }}</div>
     </section>
-
-    <van-cell title="日期" is-link :value="draft.date" @click="openDatePicker" />
 
     <section class="picker-section">
       <div class="section-label">备注</div>
@@ -77,6 +75,8 @@
         </button>
       </div>
     </section>
+
+    <van-cell title="日期" is-link :value="draft.date" @click="openDatePicker" />
 
     <div class="save-area">
       <van-button type="primary" round block size="large" :disabled="!canSave" @click="save">
