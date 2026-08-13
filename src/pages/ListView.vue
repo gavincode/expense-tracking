@@ -115,6 +115,10 @@ onMounted(load);
   border-bottom: none;
 }
 
+.record-row:active {
+  background: var(--color-border);
+}
+
 .record-category {
   font-size: var(--font-size-md);
   font-weight: 500;
