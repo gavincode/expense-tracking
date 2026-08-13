@@ -16,7 +16,7 @@
           v-for="group in groups"
           :key="group.id"
           type="button"
-          class="chip"
+          class="chip cat-chip"
           :class="{ selected: activeGroup?.id === group.id }"
           @click="selectGroup(group)"
         >
@@ -24,7 +24,7 @@
         </button>
         <button
           type="button"
-          class="chip"
+          class="chip cat-chip"
           :class="{ selected: !activeGroup && selected?.categoryId === UNCATEGORIZED.id }"
           @click="selectUncategorized"
         >
@@ -39,7 +39,7 @@
             v-for="child in activeGroup.children"
             :key="child.id"
             type="button"
-            class="chip"
+            class="chip cat-chip"
             :class="{ selected: selectedChild?.id === child.id }"
             @click="selectChild(child)"
           >
@@ -335,9 +335,20 @@ async function save() {
 }
 
 .module-subtitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   margin: var(--space-sm) var(--space-xs) var(--space-xs);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+}
+
+.module-subtitle::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
 }
 
 .chip-row {
@@ -359,17 +370,30 @@ async function save() {
   cursor: pointer;
 }
 
-.chip.selected {
+.chip.cat-chip {
   background: var(--color-primary-light);
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-light);
   color: var(--color-primary-dark);
-  font-weight: 500;
+}
+
+.chip.cat-chip.selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.chip.note-chip {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent-light);
+  color: var(--color-accent-dark);
 }
 
 .chip.note-chip.selected {
-  background: var(--color-accent-light);
+  background: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-accent-dark);
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .selected-path {
