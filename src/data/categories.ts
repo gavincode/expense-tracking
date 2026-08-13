@@ -9,6 +9,12 @@ export interface CategoryGroup {
   children: CategoryChild[];
 }
 
+/** 默认兜底分类：未分类（可直接选择，无二级项）。 */
+export const UNCATEGORIZED = {
+  id: 'uncategorized',
+  name: '未分类',
+} as const;
+
 /** 用户确认的 5 组一级 + 38 项二级预设（D-06；仅阶段维度 D-07）。 */
 export const PRESET_CATEGORIES: CategoryGroup[] = [
   {
