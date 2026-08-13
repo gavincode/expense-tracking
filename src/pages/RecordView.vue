@@ -217,6 +217,7 @@ const addPopup = ref(false);
 const addMode = ref<'group' | 'child'>('group');
 const newName = ref('');
 const pickerExpanded = ref(false);
+const amountOverwrite = ref(false);
 
 const editingId = computed<number | null>(() => {
   if (route.name !== 'edit') {
@@ -296,6 +297,7 @@ function goManage() {
 
 function prefillRecord(record: ExpenseRecord) {
   draft.amount = fromCents(record.amountCents);
+  amountOverwrite.value = true;
   draft.date = record.date;
   draft.note = record.note;
   const matched = allGroups.value
@@ -456,6 +458,10 @@ function expandPicker() {
 }
 
 function onInput(key: string) {
+  if (amountOverwrite.value) {
+    amountOverwrite.value = false;
+    draft.amount = '';
+  }
   if (key === '.') {
     if (!draft.amount.includes('.')) {
       draft.amount += '.';
@@ -476,6 +482,7 @@ function onInput(key: string) {
 }
 
 function onDelete() {
+  amountOverwrite.value = false;
   draft.amount = draft.amount.slice(0, -1);
 }
 
