@@ -33,6 +33,7 @@
       <div class="header-row">
         <h1 class="home-title">装修账本</h1>
         <div class="header-actions">
+          <button type="button" class="action-link" @click="openInvitePopup">邀请</button>
           <button type="button" class="action-link" @click="openNicknamePopup">昵称</button>
           <button type="button" class="action-link" :disabled="syncing" @click="syncAll">
             {{ syncing ? '同步中…' : '同步' }}
@@ -101,6 +102,19 @@
         </div>
       </div>
     </van-popup>
+
+    <van-popup v-model:show="invitePopup" position="bottom" round>
+      <div class="invite-panel">
+        <div class="panel-title">邀请家人加入</div>
+        <div class="invite-code">{{ inviteCode || '--' }}</div>
+        <img v-if="inviteQr" :src="inviteQr" alt="邀请二维码" class="invite-qr" />
+        <div class="invite-link">{{ inviteLink }}</div>
+        <div class="panel-actions">
+          <van-button plain round @click="invitePopup = false">关闭</van-button>
+          <van-button type="primary" round @click="copyInviteLink">复制链接</van-button>
+        </div>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -122,6 +136,7 @@ import { fromCents } from '../utils/money';
 import { useDraftStore } from '../stores/draft';
 import { useIdentityStore } from '../stores/identity';
 import { createLedger as apiCreateLedger } from '../api/client';
+import QRCode from 'qrcode';
 import { buildLocalFile, pushLedger, pullLedger } from '../db/sync';
 import type { LedgerMember } from '../types/ledger';
 import dayjs from 'dayjs';
@@ -155,7 +170,13 @@ const inviteCode = ref(safeGet('rl_invite_code'));
 const creating = ref(false);
 const syncing = ref(false);
 const nicknamePopup = ref(false);
+const invitePopup = ref(false);
+const inviteQr = ref('');
 const newNickname = ref(identity.nickname);
+
+const inviteLink = computed(() =>
+  inviteCode.value ? `${location.origin}/join?code=${inviteCode.value}` : '',
+);
 
 const members = computed<LedgerMember[]>(() => {
   try {
@@ -224,6 +245,29 @@ async function syncAll() {
 function openNicknamePopup() {
   newNickname.value = identity.nickname;
   nicknamePopup.value = true;
+}
+
+async function openInvitePopup() {
+  invitePopup.value = true;
+  if (inviteCode.value) {
+    try {
+      inviteQr.value = await QRCode.toDataURL(
+        `${location.origin}/join?code=${inviteCode.value}`,
+        { width: 180, margin: 1 },
+      );
+    } catch {
+      inviteQr.value = '';
+    }
+  }
+}
+
+async function copyInviteLink() {
+  try {
+    await navigator.clipboard.writeText(inviteLink.value);
+    showToast('链接已复制');
+  } catch {
+    showToast('复制失败，请手动复制下方链接');
+  }
 }
 
 function confirmNickname() {
@@ -506,5 +550,31 @@ onMounted(() => {
 
 .panel-actions .van-button {
   flex: 1;
+}
+
+.invite-panel {
+  padding: var(--space-lg) var(--space-md) calc(var(--space-lg) + env(safe-area-inset-bottom));
+  text-align: center;
+}
+
+.invite-code {
+  margin: var(--space-md) 0;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 8px;
+  color: var(--color-primary-dark);
+}
+
+.invite-qr {
+  width: 180px;
+  height: 180px;
+  border-radius: 8px;
+}
+
+.invite-link {
+  margin: var(--space-md) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  word-break: break-all;
 }
 </style>
