@@ -15,6 +15,7 @@ import App from './App.vue';
 import router from './router';
 import 'vant/lib/index.css';
 import './styles/tokens.css';
+import { registerSW } from 'virtual:pwa-register';
 
 const app = createApp(App);
 
@@ -23,3 +24,5 @@ const app = createApp(App);
 );
 
 app.use(createPinia()).use(router).mount('#app');
+
+registerSW({ immediate: true });
